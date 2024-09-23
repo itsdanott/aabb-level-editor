@@ -1,11 +1,14 @@
 package main
 
 import "core:fmt"
+import "core:c"
+import "core:os"
 import "hellope_package"
 import "vendor:glfw"
 import "vendor:OpenGL"
-import "core:c"
 import "base:runtime"
+import "aabb_editor"
+
 
 GL_VERSION_MAJOR : c.int : 4
 GL_VERSION_MINOR : c.int : 1
@@ -19,32 +22,27 @@ glfw_framebuffer_size_callback :: proc "c" (window: glfw.WindowHandle, width, he
     OpenGL.Viewport(0,0, width, height)
 }
 
+base_path : string
+
+init_base_path :: proc () {
+    base_path = "test"
+}
+
 main :: proc() {
+    fmt.println("Max-Value: i8", max(i8))
+    fmt.println("Max-Value: i16", max(i16))
+    fmt.println("Max-Value: i32", max(i32))
+    fmt.println("Max-Value: i64", max(i64))
+
+    fmt.println("Max-Value: u8", max(u8))
+    fmt.println("Max-Value: u16", max(u16))
+    fmt.println("Max-Value: u32", max(u32))
+    fmt.println("Max-Value: u64", max(u64))
+
+    fmt.println("BasePath:", base_path)
+    init_base_path()
+    fmt.println("BasePath:", base_path)
     constant_hello_str : string : "Hellope!"
-
-    // hello_str := "Hellope!"
-    // hello_str_len := len(hello_str)
-    // fmt.printfln("This is '%s', it has a length of %i and test_integer is %i", hello_str, hello_str_len, sh.test_integer )
-
-    // str: string = "Some text"
-
-    // for character in str {
-    //     assert(type_of(character) != rune)
-    //     fmt.println(character)
-    // }
-
-    // test_array := [4]int{}
-
-    // for i := 0; i < 10; i += 1 {
-    //     fmt.println("Hello")
-    // }
-
-    // for &value, index in test_array {
-    //     fmt.printfln("Before [%i] = Value: %i", index, value)
-    //     value = index
-    //     fmt.printfln("After  [%i] = Value: %i", index, value)
-    // }
-
 
     context = runtime.default_context()
     glfw.WindowHint(glfw.RESIZABLE, 1)
@@ -58,6 +56,7 @@ main :: proc() {
     if glfw.Init() == false {
         return;    
     }
+
 
     defer glfw.Terminate()
     glfw.SetErrorCallback(glfw_error)
@@ -82,6 +81,9 @@ main :: proc() {
     
     //TODO: getting base, executable, appdata paths
 
+
+    texture := aabb_editor.load_texture("rabbyte_logo_512.png")
+    
     for !glfw.WindowShouldClose(glfw_window) {
 
         OpenGL.ClearColor(0.25, 0.25, 0.5, 1.0)
