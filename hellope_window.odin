@@ -10,6 +10,11 @@ import "base:runtime"
 import "aabb_editor"
 import "core:strings"
 
+//test - move to ui file later
+import imgui "third-party/odin-imgui"
+import "third-party/odin-imgui/imgui_impl_glfw"
+import "third-party/odin-imgui/imgui_impl_opengl3"
+
 vec3 :: struct {
     x, y, z : f32
 }
@@ -81,12 +86,33 @@ main :: proc() {
     if !init_glfw() do return
     defer glfw.Terminate()
 
-    if !init_glfw_window(800, 600, "Hellope Odin") do return
     defer glfw.DestroyWindow(glfw_window)
     
-
     OpenGL.load_up_to(int(GL_VERSION_MAJOR), int(GL_VERSION_MINOR), glfw.gl_set_proc_address)
     
+    /// init imgui----------------------------------------------
+    imgui.CHECKVERSION()
+    imgui.CreateContext()
+    defer imgui.DestroyContext()
+    io := imgui.GetIO()
+    io.ConfigFlags += {.NavEnableKeyboard, .NavEnableGamepad}
+    
+    //Docking only
+    io.ConfigFlags += { .DockingEnable}
+    io.ConfigFlags += { .ViewportsEnable}
+    style := imgui.GetStyle()
+    style.WindowRounding = 0
+    style.Colors[imgui.Col.WindowBg].w = 1
+    //
+
+    imgui.StyleColorsDark()
+
+    imgui_impl_glfw.InitForOpenGL(glfw_window, true)
+    defer imgui_impl_glfw.Shutdown()
+    imgui_impl_opengl3.Init("#version 150")
+    defer imgui_impl_opengl3.Shutdown()
+    //----------------------------------------------------------
+
     texture, texture_success := aabb_editor.load_texture("rabbyte_logo_512.png")
     if !texture_success do return
     defer free(texture)
@@ -126,15 +152,16 @@ main :: proc() {
     OpenGL.EnableVertexAttribArray(1)
     OpenGL.VertexAttribPointer(1, 2, OpenGL.FLOAT, OpenGL.FALSE, 4 * size_of(f32), 2 * size_of(f32))
 
-
     shader_texture_location := OpenGL.GetUniformLocation(shader.id, "screenTexture")
-    for !glfw.WindowShouldClose(glfw_window) {
 
+    for !glfw.WindowShouldClose(glfw_window) {
         OpenGL.ClearColor(0.25, 0.25, 0.5, 1.0)
         OpenGL.Clear(OpenGL.COLOR_BUFFER_BIT)
 
         glfw.PollEvents()
 
+        //Draw 3d
+        {   
         OpenGL.UseProgram(shader.id)
         OpenGL.ActiveTexture(OpenGL.TEXTURE0)
         OpenGL.BindTexture(OpenGL.TEXTURE_2D, texture.id)
@@ -142,6 +169,33 @@ main :: proc() {
 
         OpenGL.BindVertexArray(vao)
         OpenGL.DrawArrays(OpenGL.TRIANGLES, 0, 6)
+        }
+        
+        //Draw imgui
+        {
+            imgui_impl_opengl3.NewFrame()
+            imgui_impl_glfw.NewFrame()
+            imgui.NewFrame()
+            
+            imgui.ShowDemoWindow()
+            
+            if imgui.Begin("Window containing a quit button") {
+                if imgui.Button("The quit button in question") {
+                    glfw.SetWindowShouldClose(glfw_window, true)
+                }
+            }
+            imgui.End()
+            
+            imgui.Render()
+            imgui_impl_opengl3.RenderDrawData(imgui.GetDrawData())
+            
+            //Docking only
+            backup_current_window := glfw.GetCurrentContext()
+            imgui.UpdatePlatformWindows()
+            imgui.RenderPlatformWindowsDefault()
+            glfw.MakeContextCurrent(backup_current_window)
+            //
+        }
 
         glfw.SwapBuffers(glfw_window)
     }
