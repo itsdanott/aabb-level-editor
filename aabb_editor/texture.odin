@@ -13,20 +13,21 @@ texture :: struct {
     id : u32
 }
 
-load_texture :: proc(file_path : string) -> ^texture {
-    texture := new(texture)
-    defer free(texture)
-
+load_texture :: proc(file_path : string) -> (texture_out: ^texture, success: bool) {
     width, height, channels : c.int
-    path : cstring = strings.clone_to_cstring(file_path)
+    path, cstr_err := strings.clone_to_cstring(from_base_path(file_path))
+    assert(cstr_err == nil)
     raw_data : [^]byte = image.load(path, &width, &height, &channels, 0)
 
     if raw_data == nil {
         fmt.println("Failed to load texture: ", file_path)
-        return nil
+        return nil, false
     }
+
     defer image.image_free(raw_data)
 
+    texture := new(texture)
+    
     texture.width = u16(width)
     texture.height = u16(height)
     texture.channels = u8(channels)
@@ -40,8 +41,7 @@ load_texture :: proc(file_path : string) -> ^texture {
     OpenGL.TexParameteri(OpenGL.TEXTURE_2D, OpenGL.TEXTURE_MAG_FILTER, OpenGL.LINEAR);
 
     OpenGL.TexImage2D(OpenGL.TEXTURE_2D, 0, OpenGL.RGB, width, height, 0, OpenGL.RGB, OpenGL.UNSIGNED_BYTE, raw_data)
-    OpenGL.GenerateMipmap(texture.id)
+    OpenGL.GenerateMipmap(OpenGL.TEXTURE_2D)
 
-
-    return texture
+    return texture, true
 }
