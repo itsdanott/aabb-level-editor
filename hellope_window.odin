@@ -85,7 +85,8 @@ main :: proc() {
 
     if !init_glfw() do return
     defer glfw.Terminate()
-
+    
+    if !init_glfw_window(800, 600, "Hellope Odin") do return
     defer glfw.DestroyWindow(glfw_window)
     
     OpenGL.load_up_to(int(GL_VERSION_MAJOR), int(GL_VERSION_MINOR), glfw.gl_set_proc_address)
@@ -158,17 +159,17 @@ main :: proc() {
         OpenGL.ClearColor(0.25, 0.25, 0.5, 1.0)
         OpenGL.Clear(OpenGL.COLOR_BUFFER_BIT)
 
-        glfw.PollEvents()
+        glfw.PollEvents()        
 
         //Draw 3d
         {   
-        OpenGL.UseProgram(shader.id)
-        OpenGL.ActiveTexture(OpenGL.TEXTURE0)
-        OpenGL.BindTexture(OpenGL.TEXTURE_2D, texture.id)
-        OpenGL.Uniform1i(shader_texture_location, 0)
-
-        OpenGL.BindVertexArray(vao)
-        OpenGL.DrawArrays(OpenGL.TRIANGLES, 0, 6)
+            OpenGL.UseProgram(shader.id)
+            OpenGL.ActiveTexture(OpenGL.TEXTURE0)
+            OpenGL.BindTexture(OpenGL.TEXTURE_2D, texture.id)
+            OpenGL.Uniform1i(shader_texture_location, 0)
+            
+            OpenGL.BindVertexArray(vao)
+            OpenGL.DrawArrays(OpenGL.TRIANGLES, 0, 6)
         }
         
         //Draw imgui
