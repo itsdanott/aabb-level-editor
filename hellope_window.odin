@@ -61,8 +61,8 @@ init_glfw_window :: proc(width, height : u16, title : string) -> bool {
     
     glfw_window = glfw.CreateWindow(c.int(width), c.int(height), title_cstring, nil, nil)
     if glfw_window == nil {
-        fmt.printfln("Failed to create glfw_window!");
-        return false;
+        fmt.printfln("Failed to create glfw_window!")
+        return false
     }
 
     glfw.MakeContextCurrent(glfw_window)
@@ -138,9 +138,9 @@ main :: proc() {
         OpenGL.BindTexture(OpenGL.TEXTURE_2D, texture.id)
         OpenGL.BindVertexArray(vao)
 
-        OpenGL.Uniform1i(shader_texture_location, 0);
+        OpenGL.Uniform1i(shader_texture_location, 0)
         OpenGL.DrawArrays(OpenGL.TRIANGLES, 0, 6)
 
-        glfw.SwapBuffers(glfw_window);
+        glfw.SwapBuffers(glfw_window)
     }
 }
