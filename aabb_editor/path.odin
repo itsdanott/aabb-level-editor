@@ -4,7 +4,10 @@ import "core:strings"
 base_path : string
 
 init_base_path :: proc () {
-    base_path = "/Users/daniel/Dev/Learn/LearnOdin/"//TODO: proper setup
+    //TODO: proper setup (base path determination)
+    when ODIN_OS == .Darwin do base_path = "/Users/daniel/Dev/Learn/LearnOdin/" 
+    else when ODIN_OS == .Windows do base_path = "E:/Dev/Learn/LearnOdin/"
+    else do panic("No basepath implementation for this platform!")
 }
 
 from_base_path :: proc(file_path : string) -> string {

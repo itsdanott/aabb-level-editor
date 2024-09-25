@@ -14,9 +14,11 @@ texture :: struct {
 }
 
 load_texture :: proc(file_path : string) -> (texture_out: ^texture, success: bool) {
-    width, height, channels : c.int
     path, cstr_err := strings.clone_to_cstring(from_base_path(file_path))
     assert(cstr_err == nil)
+    
+    width, height, channels : c.int
+    image.set_flip_vertically_on_load(1)
     raw_data : [^]byte = image.load(path, &width, &height, &channels, 0)
 
     if raw_data == nil {
@@ -40,7 +42,7 @@ load_texture :: proc(file_path : string) -> (texture_out: ^texture, success: boo
     OpenGL.TexParameteri(OpenGL.TEXTURE_2D, OpenGL.TEXTURE_MIN_FILTER, OpenGL.LINEAR_MIPMAP_LINEAR);
     OpenGL.TexParameteri(OpenGL.TEXTURE_2D, OpenGL.TEXTURE_MAG_FILTER, OpenGL.LINEAR);
 
-    OpenGL.TexImage2D(OpenGL.TEXTURE_2D, 0, OpenGL.RGB, width, height, 0, OpenGL.RGB, OpenGL.UNSIGNED_BYTE, raw_data)
+    OpenGL.TexImage2D(OpenGL.TEXTURE_2D, 0, OpenGL.RGB, width, height, 0, OpenGL.RGBA, OpenGL.UNSIGNED_BYTE, raw_data)
     OpenGL.GenerateMipmap(OpenGL.TEXTURE_2D)
 
     return texture, true

@@ -95,34 +95,36 @@ main :: proc() {
     if !shader_success do return
     defer free(shader)
 
-    vertices : []f32 = {
+    vertices : [24]f32 = {
         //Position(XY)  TexCoord(XY)
-        -1.0,  -1.0,       0,      0,
-         1.0,  -1.0,     1.0,      0,
-         1.0,   1.0,     1.0,    1.0,
+        -1.0,  -1.0,      0,      0,
+         1.0,  -1.0,    1.0,      0,
+         1.0,   1.0,    1.0,    1.0,
 
-         1.0,   1.0,     1.0,    1.0,
-        -1.0,   1.0,       0,    1.0,
-        -1.0,  -1.0,       0,      0,
+         1.0,   1.0,    1.0,    1.0,
+        -1.0,   1.0,      0,    1.0,
+        -1.0,  -1.0,      0,      0,
     }
+
+    vertices_num := len(vertices)
 
     vao, vbo : u32
 
-    OpenGL.GenBuffers(1, &vbo)
     OpenGL.GenVertexArrays(1, &vao)
+    OpenGL.GenBuffers(1, &vbo)
 
-    defer OpenGL.DeleteBuffers(1, &vbo)
     defer OpenGL.DeleteVertexArrays(1, &vao)
+    defer OpenGL.DeleteBuffers(1, &vbo)
 
     OpenGL.BindVertexArray(vao)
     OpenGL.BindBuffer(OpenGL.ARRAY_BUFFER, vbo)
-    OpenGL.BufferData(OpenGL.ARRAY_BUFFER, size_of(vertices), &vertices, OpenGL.STATIC_DRAW)
+    OpenGL.BufferData(OpenGL.ARRAY_BUFFER, size_of(f32) * vertices_num, &vertices, OpenGL.STATIC_DRAW)
 
     OpenGL.EnableVertexAttribArray(0)
-    OpenGL.VertexAttribPointer(0, 2, OpenGL.FLOAT, OpenGL.FALSE, 4 * size_of(f32), uintptr(0))
+    OpenGL.VertexAttribPointer(0, 2, OpenGL.FLOAT, OpenGL.FALSE, 4 * size_of(f32), 0)
 
     OpenGL.EnableVertexAttribArray(1)
-    OpenGL.VertexAttribPointer(1, 2, OpenGL.FLOAT, OpenGL.FALSE, 4 * size_of(f32), uintptr(2 * size_of(f32)))
+    OpenGL.VertexAttribPointer(1, 2, OpenGL.FLOAT, OpenGL.FALSE, 4 * size_of(f32), 2 * size_of(f32))
 
 
     shader_texture_location := OpenGL.GetUniformLocation(shader.id, "screenTexture")
@@ -136,9 +138,9 @@ main :: proc() {
         OpenGL.UseProgram(shader.id)
         OpenGL.ActiveTexture(OpenGL.TEXTURE0)
         OpenGL.BindTexture(OpenGL.TEXTURE_2D, texture.id)
-        OpenGL.BindVertexArray(vao)
-
         OpenGL.Uniform1i(shader_texture_location, 0)
+
+        OpenGL.BindVertexArray(vao)
         OpenGL.DrawArrays(OpenGL.TRIANGLES, 0, 6)
 
         glfw.SwapBuffers(glfw_window)
