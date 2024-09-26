@@ -3,7 +3,6 @@ package main
 import "core:fmt"
 import "core:c"
 import "core:os"
-import "hellope_package"
 import "vendor:glfw"
 import "vendor:OpenGL"
 import "base:runtime"
