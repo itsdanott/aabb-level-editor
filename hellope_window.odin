@@ -16,7 +16,7 @@ import "third-party/odin-imgui/imgui_impl_glfw"
 import "third-party/odin-imgui/imgui_impl_opengl3"
 
 vec3 :: struct {
-    x, y, z : f32
+    x, y, z : f32,
 }
 
 GL_VERSION_MAJOR : c.int : 4

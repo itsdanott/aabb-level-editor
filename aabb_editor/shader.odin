@@ -8,12 +8,12 @@ import "core:strings"
 import "core:io"
 
 shader :: struct {
-    id : u32
+    id : u32,
 }
 
 shader_type :: enum {
     VERTEX_SHADER,
-    FRAGMENT_SHADER
+    FRAGMENT_SHADER,
 }
 
 load_shader_source :: proc (file_path : string) -> (source: string, success: bool) {
@@ -75,10 +75,10 @@ check_shader_program_link_status :: proc(shader_program : u32) -> bool {
 
 get_opengl_shader_type :: proc(shader_type: shader_type) -> u32 {
     switch shader_type {
-        case .VERTEX_SHADER:
-            return OpenGL.VERTEX_SHADER
-        case .FRAGMENT_SHADER:
-            return OpenGL.FRAGMENT_SHADER
+    case .VERTEX_SHADER:
+        return OpenGL.VERTEX_SHADER
+    case .FRAGMENT_SHADER:
+        return OpenGL.FRAGMENT_SHADER
     }
 
     panic("invalid shader type")

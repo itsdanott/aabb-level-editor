@@ -10,7 +10,7 @@ import "vendor:OpenGL"
 texture :: struct {
     width, height : u16,
     channels : u8,
-    id : u32
+    id : u32,
 }
 
 load_texture :: proc(file_path : string) -> (texture_out: ^texture, success: bool) {
@@ -37,10 +37,10 @@ load_texture :: proc(file_path : string) -> (texture_out: ^texture, success: boo
     OpenGL.GenTextures(1, &texture.id)
     OpenGL.BindTexture(OpenGL.TEXTURE_2D, texture.id)
 
-    OpenGL.TexParameteri(OpenGL.TEXTURE_2D, OpenGL.TEXTURE_WRAP_S, OpenGL.REPEAT);
-    OpenGL.TexParameteri(OpenGL.TEXTURE_2D, OpenGL.TEXTURE_WRAP_T, OpenGL.REPEAT);
-    OpenGL.TexParameteri(OpenGL.TEXTURE_2D, OpenGL.TEXTURE_MIN_FILTER, OpenGL.LINEAR_MIPMAP_LINEAR);
-    OpenGL.TexParameteri(OpenGL.TEXTURE_2D, OpenGL.TEXTURE_MAG_FILTER, OpenGL.LINEAR);
+    OpenGL.TexParameteri(OpenGL.TEXTURE_2D, OpenGL.TEXTURE_WRAP_S, OpenGL.REPEAT)
+    OpenGL.TexParameteri(OpenGL.TEXTURE_2D, OpenGL.TEXTURE_WRAP_T, OpenGL.REPEAT)
+    OpenGL.TexParameteri(OpenGL.TEXTURE_2D, OpenGL.TEXTURE_MIN_FILTER, OpenGL.LINEAR_MIPMAP_LINEAR)
+    OpenGL.TexParameteri(OpenGL.TEXTURE_2D, OpenGL.TEXTURE_MAG_FILTER, OpenGL.LINEAR)
 
     OpenGL.TexImage2D(OpenGL.TEXTURE_2D, 0, OpenGL.RGB, width, height, 0, OpenGL.RGBA, OpenGL.UNSIGNED_BYTE, raw_data)
     OpenGL.GenerateMipmap(OpenGL.TEXTURE_2D)
