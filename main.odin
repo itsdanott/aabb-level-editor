@@ -27,7 +27,6 @@ glfw_framebuffer_size_callback :: proc "c" (window: glfw.WindowHandle, width, he
     OpenGL.Viewport(0,0, width, height)
 }
 
-
 check_for_supported_platform :: proc () {
     when !(ODIN_OS == .Darwin || ODIN_OS == .Windows || ODIN_OS == .Linux) {
         fmt.panicf("Unsupported Platform: %s", ODIN_OS)
@@ -160,6 +159,15 @@ main :: proc() {
         OpenGL.Clear(OpenGL.COLOR_BUFFER_BIT)
 
         glfw.PollEvents()        
+
+        //input processing
+        if glfw.GetMouseButton(glfw_window, 0) == glfw.PRESS {
+            if !io.WantCaptureMouse {
+                mouse_x, mouse_y := glfw.GetCursorPos(glfw_window)
+                fmt.printfln("Mouse Button pressed: X:%f, Y:%f", mouse_x, mouse_y)
+            }
+        }
+        //
 
         //Draw 3d
         {   
