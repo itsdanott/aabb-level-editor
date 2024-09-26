@@ -118,6 +118,10 @@ main :: proc() {
     if !shader_success do return
     defer free(shader)
 
+    unlit_color_shader, unlit_color_shader_success := aabb_editor.load_shader_from_files("shaders/unlit_color.vert.glsl", "shaders/unlit_color.frag.glsl")
+    if !unlit_color_shader_success do return
+    defer free(unlit_color_shader)
+
     vertices := [?]f32 {
         //Position(XY)  TexCoord(XY)
         -1.0,  -1.0,      0,      0,
