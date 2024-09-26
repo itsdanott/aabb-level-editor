@@ -22,7 +22,7 @@ load_texture :: proc(file_path : string) -> (texture_out: ^texture, success: boo
     raw_data : [^]byte = image.load(path, &width, &height, &channels, 0)
 
     if raw_data == nil {
-        fmt.println("Failed to load texture: ", file_path)
+        fmt.println("Failed to load texture: ", path)
         return nil, false
     }
 
