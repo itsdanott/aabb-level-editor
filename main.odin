@@ -122,7 +122,7 @@ main :: proc() {
     if !shader_success do return
     defer free(shader)
 
-    vertices : [24]f32 = {
+    vertices := [?]f32 {
         //Position(XY)  TexCoord(XY)
         -1.0,  -1.0,      0,      0,
          1.0,  -1.0,    1.0,      0,
