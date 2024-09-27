@@ -1,5 +1,6 @@
 package aabb_editor
 import gl "vendor:OpenGL"
+import "core:math"
 
 grid_state :: struct {
     pos, scale : vec3,
@@ -9,7 +10,6 @@ grid_state :: struct {
     shader_view_location : i32,
     shader_projection_location : i32,
     shader_view_pos_location : i32,
-    shader_grid_scale_location : i32,
 }
 
 make_grid_state :: proc() -> grid_state {
@@ -27,7 +27,6 @@ init_grid :: proc(grid : ^grid_state) -> bool {
     grid.shader_view_location = gl.GetUniformLocation(grid.shader.id, "view")
     grid.shader_projection_location = gl.GetUniformLocation(grid.shader.id, "projection")
     grid.shader_view_pos_location = gl.GetUniformLocation(grid.shader.id, "viewPos")
-    grid.shader_grid_scale_location = gl.GetUniformLocation(grid.shader.id, "gridScale")
 
     vertices := [?]f32 {
         0.0, 0.0, 0.0,
@@ -58,8 +57,8 @@ cleanup_grid :: proc(grid : ^grid_state) {
     free_shader(grid.shader)
 }
 
-draw_grid :: proc(grid : ^grid_state, cam : ^camera) {
-    grid.pos = {cam.pos.x - grid.scale.x * 0.5, 0, cam.pos.z  - grid.scale.z * 0.5}
+draw_grid :: proc(grid : ^grid_state, editor : ^editor_state, cam : ^camera) {
+    grid.pos = {editor.box1_pos.x - grid.scale.x * 0.5, math.floor(editor.box1_pos.y), editor.box1_pos.z - grid.scale.z * 0.5}
     model : mat4 = create_model_matrix(grid.pos,grid.scale)
     
     gl.Enable(gl.BLEND)
@@ -69,7 +68,6 @@ draw_grid :: proc(grid : ^grid_state, cam : ^camera) {
     gl.UniformMatrix4fv(grid.shader_view_location, 1, false, &cam.view_matrix[0][0])
     gl.UniformMatrix4fv(grid.shader_projection_location, 1, false, &cam.projection_matrix[0][0])
     gl.Uniform3f(grid.shader_view_pos_location, cam.pos.x, cam.pos.y, cam.pos.z)
-    gl.Uniform1f(grid.shader_grid_scale_location, 1.0)
     gl.BindVertexArray(grid.vao)
     gl.DrawArrays(gl.TRIANGLES, 0, 6)
     gl.Disable(gl.BLEND)
