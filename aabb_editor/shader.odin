@@ -132,3 +132,10 @@ load_shader :: proc (vert_source, frag_source : string) -> (shader_out: ^shader,
 
     return shader_out, true
 }
+
+free_shader :: proc (shader : ^shader) {
+    assert(shader != nil)
+    assert(shader.id > 0)
+    OpenGL.DeleteProgram(shader.id)
+    free(shader)
+}
