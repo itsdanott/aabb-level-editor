@@ -47,3 +47,10 @@ load_texture :: proc(file_path : string) -> (texture_out: ^texture, success: boo
 
     return texture, true
 }
+
+free_texture :: proc(texture : ^texture) { 
+    assert(texture != nil)
+    assert(texture.id > 0)
+    OpenGL.DeleteTextures(1, &texture.id)
+    free(texture)
+}

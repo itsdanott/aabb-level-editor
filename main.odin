@@ -26,15 +26,15 @@ main :: proc() {
 
     texture, texture_success := aabb_editor.load_texture("rabbyte_logo_512.png")
     if !texture_success do return
-    defer free(texture)
+    defer aabb_editor.free_texture(texture)
 
     shader, shader_success := aabb_editor.load_shader_from_files("shaders/simple.vert.glsl", "shaders/simple.frag.glsl")
     if !shader_success do return
-    defer free(shader)
+    defer aabb_editor.free_shader(shader)
 
     unlit_color_shader, unlit_color_shader_success := aabb_editor.load_shader_from_files("shaders/unlit_color.vert.glsl", "shaders/unlit_color.frag.glsl")
     if !unlit_color_shader_success do return
-    defer free(unlit_color_shader)
+    defer aabb_editor.free_shader(unlit_color_shader)
 
     vertices := [?]f32 {
         //Position(XY)  TexCoord(XY)
