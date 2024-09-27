@@ -101,7 +101,7 @@ main :: proc() {
         //     OpenGL.BindVertexArray(vao)
         //     OpenGL.DrawArrays(OpenGL.TRIANGLES, 0, 6)
         // }
-        aabb_editor.draw_grid(&grid_state, &camera)
+        aabb_editor.draw_grid(&grid_state, &editor_state, &camera)
         aabb_editor.draw_box_line_renderer(editor_state.box1_pos, editor_state.box1_scale, editor_state.box1_color, &box_line_renderer, &camera, &global_shader_state)
 
         aabb_editor.draw_editor(&editor_state, &grid_state, &camera)
