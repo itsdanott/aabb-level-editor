@@ -14,6 +14,13 @@ glfw_window : glfw.WindowHandle = nil
 framebuffer_size_x,framebuffer_size_y : i32
 framebuffer_aspect : f32
 
+//Todo: think of a solution to avoid global variables and replace with this struct
+window_state :: struct {
+    glfw_window : glfw.WindowHandle,
+    framebuffer_size_x, framebuffer_size_y : i32,
+    framebuffer_aspect : f32,
+}
+
 glfw_error :: proc "c" (error : c.int, description : cstring) {
     context = runtime.default_context()
     fmt.println("glfw_error:", error, "description:", description)
