@@ -10,6 +10,8 @@ is_editor_visible : bool = true
 is_editor_settings_window_visible : bool = true
 io : ^imgui.IO = nil
 
+box1_pos, box1_scale, box1_color : vec3 = {0,0,0}, {1,1,1}, {0.5,1,0.5}
+
 init_imgui :: proc() -> bool {
     imgui.CHECKVERSION()
     imgui.CreateContext()
@@ -45,10 +47,23 @@ process_editor_input :: proc () {
             fmt.printfln("Mouse Button pressed: X:%f, Y:%f", mouse_x, mouse_y)
         }
     }
+
+    delta_time : f32 : 1.0 / 60.0
+    cam_move_speed : f32 = 2.0
+    cam_velocity : vec3 = {0,0,0}
+
+    if glfw.GetKey(glfw_window, glfw.KEY_W) == glfw.PRESS do cam_velocity.z -= cam_move_speed 
+    if glfw.GetKey(glfw_window, glfw.KEY_S) == glfw.PRESS do cam_velocity.z += cam_move_speed 
+    if glfw.GetKey(glfw_window, glfw.KEY_D) == glfw.PRESS do cam_velocity.x += cam_move_speed 
+    if glfw.GetKey(glfw_window, glfw.KEY_A) == glfw.PRESS do cam_velocity.x -= cam_move_speed 
+
+    new_cam_pos := Vec3(cam_pos) + Vec3(cam_velocity) * cam_move_speed * delta_time
+    cam_pos = {new_cam_pos.x, new_cam_pos.y, new_cam_pos.z}
 }
 
 draw_editor_main_menu :: proc () {
     if imgui.BeginMainMenuBar() {
+        
         if imgui.BeginMenu("File") {
             if imgui.MenuItem("New") {
                 fmt.println("New!")
@@ -77,18 +92,56 @@ draw_editor_main_menu :: proc () {
 draw_editor_settings_window :: proc () {
     if !is_editor_settings_window_visible do return
     
-    // flags : imgui.WindowFlags : {.NoMove, .NoResize, .NoCollapse}
+    flags : imgui.WindowFlags : {.NoMove, .NoResize, .NoCollapse, .NoTitleBar}
 
-    // display_size := io.DisplaySize
-    // window_pos := imgui.Vec2 {display_size.x * 0.75, 0.0}
-    // window_size := imgui.Vec2 {display_size.x * 0.25, display_size.y}
+    display_size := io.DisplaySize
+    frame_height := imgui.GetFrameHeight()
+    window_pos := imgui.Vec2 {display_size.x * 0.75, frame_height}
+    window_size := imgui.Vec2 {display_size.x * 0.25, display_size.y - frame_height}
 
-    // imgui.SetNextWindowPos(window_pos)
-    // imgui.SetNextWindowSize(window_size)
+    imgui.SetNextWindowPos(window_pos)
+    imgui.SetNextWindowSize(window_size)
     
-    // if imgui.Begin("Settings", nil, flags) {
-    // }
-    // imgui.End()
+    if imgui.Begin("Settings", nil, flags) {
+        if imgui.TreeNode("Camera") {
+
+            imgui.DragFloat("FOV", &cam_fov)
+            imgui.DragFloat("Camera.X", &cam_pos.x)
+            imgui.DragFloat("Camera.Y", &cam_pos.y)
+            imgui.DragFloat("Camera.Z", &cam_pos.z)
+
+            imgui.TreePop()
+        }
+        
+        if imgui.TreeNode("Grid") {
+            imgui.DragFloat("Grid_Pos.X", &grid_pos.x)
+            imgui.DragFloat("Grid_Pos.Y", &grid_pos.y)
+            imgui.DragFloat("Grid_Pos.Z", &grid_pos.z)
+
+            imgui.DragFloat("Grid_Scale.X", &grid_scale.x)
+            imgui.DragFloat("Grid_Scale.Y", &grid_scale.y)
+            imgui.DragFloat("Grid_Scale.Z", &grid_scale.z)
+            
+            imgui.TreePop()
+        }
+        
+        if imgui.TreeNode("Box") {
+            imgui.DragFloat("Box_Pos.X", &box1_pos.x)
+            imgui.DragFloat("Box_Pos.Y", &box1_pos.y)
+            imgui.DragFloat("Box_Pos.Z", &box1_pos.z)
+
+            imgui.DragFloat("Box_Scale.X", &box1_scale.x)
+            imgui.DragFloat("Box_Scale.Y", &box1_scale.y)
+            imgui.DragFloat("Box_Scale.Z", &box1_scale.z)
+
+            box_col := Vec3(box1_color)
+            imgui.ColorEdit3("Box_Color", &box_col)
+            box1_color = {box_col.r, box_col.g, box_col.b}
+            
+            imgui.TreePop()
+        }
+    }
+    imgui.End()
 }
 
 draw_editor :: proc () {

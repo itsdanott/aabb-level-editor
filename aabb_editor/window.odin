@@ -11,12 +11,22 @@ GL_VERSION_MAJOR : c.int : 4
 GL_VERSION_MINOR : c.int : 1
 glfw_window : glfw.WindowHandle = nil
 
+framebuffer_size_x,framebuffer_size_y : i32
+framebuffer_aspect : f32
+
 glfw_error :: proc "c" (error : c.int, description : cstring) {
     context = runtime.default_context()
     fmt.println("glfw_error:", error, "description:", description)
 }
 
 glfw_framebuffer_size_callback :: proc "c" (window: glfw.WindowHandle, width, height : i32) {
+    framebuffer_size_x = width
+    framebuffer_size_y = height
+
+    context = runtime.default_context()
+    assert(framebuffer_size_x > 0 && framebuffer_size_y > 0)
+    framebuffer_aspect = f32(framebuffer_size_x) / f32(framebuffer_size_y)
+
     OpenGL.Viewport(0,0, width, height)
 }
 
@@ -58,6 +68,7 @@ init_glfw_window :: proc(width, height : u16, title : string) -> bool {
     glfw.SetFramebufferSizeCallback(glfw_window, glfw_framebuffer_size_callback)
     
     OpenGL.load_up_to(int(GL_VERSION_MAJOR), int(GL_VERSION_MINOR), glfw.gl_set_proc_address)
-
+    glfw_framebuffer_size_callback(glfw_window, c.int(width), c.int(height))
+    
     return true
 }

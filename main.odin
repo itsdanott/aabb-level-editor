@@ -18,7 +18,7 @@ main :: proc() {
     if !aabb_editor.init_glfw() do return
     defer glfw.Terminate()
     
-    if !aabb_editor.init_glfw_window(800, 600, "Hellope Odin") do return
+    if !aabb_editor.init_glfw_window(1280, 768, "Hellope Odin") do return
     defer glfw.DestroyWindow(aabb_editor.glfw_window)
     
     if !aabb_editor.init_imgui() do return
@@ -31,11 +31,16 @@ main :: proc() {
     shader, shader_success := aabb_editor.load_shader_from_files("shaders/simple.vert.glsl", "shaders/simple.frag.glsl")
     if !shader_success do return
     defer aabb_editor.free_shader(shader)
+    
+    if !aabb_editor.init_global_shaders() do return
+    defer aabb_editor.free_global_shaders()
 
-    unlit_color_shader, unlit_color_shader_success := aabb_editor.load_shader_from_files("shaders/unlit_color.vert.glsl", "shaders/unlit_color.frag.glsl")
-    if !unlit_color_shader_success do return
-    defer aabb_editor.free_shader(unlit_color_shader)
+    if !aabb_editor.init_grid() do return
+    defer aabb_editor.cleanup_grid()
 
+    aabb_editor.init_box_line_renderer() 
+    defer aabb_editor.cleanup_box_line_renderer()
+    
     vertices := [?]f32 {
         //Position(XY)  TexCoord(XY)
         -1.0,  -1.0,      0,      0,
@@ -74,19 +79,23 @@ main :: proc() {
         OpenGL.Clear(OpenGL.COLOR_BUFFER_BIT)
 
         glfw.PollEvents()        
-
+        
+        aabb_editor.update_camera_matrices()
+        
         aabb_editor.process_editor_input()
     
         //Draw 3d
-        {   
-            OpenGL.UseProgram(shader.id)
-            OpenGL.ActiveTexture(OpenGL.TEXTURE0)
-            OpenGL.BindTexture(OpenGL.TEXTURE_2D, texture.id)
-            OpenGL.Uniform1i(shader_texture_location, 0)
+        // {   
+        //     OpenGL.UseProgram(shader.id)
+        //     OpenGL.ActiveTexture(OpenGL.TEXTURE0)
+        //     OpenGL.BindTexture(OpenGL.TEXTURE_2D, texture.id)
+        //     OpenGL.Uniform1i(shader_texture_location, 0)
             
-            OpenGL.BindVertexArray(vao)
-            OpenGL.DrawArrays(OpenGL.TRIANGLES, 0, 6)
-        }
+        //     OpenGL.BindVertexArray(vao)
+        //     OpenGL.DrawArrays(OpenGL.TRIANGLES, 0, 6)
+        // }
+        aabb_editor.draw_grid()
+        aabb_editor.draw_box_line_renderer(aabb_editor.box1_pos, aabb_editor.box1_scale, aabb_editor.box1_color)
 
         aabb_editor.draw_editor()
 

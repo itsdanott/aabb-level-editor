@@ -12,7 +12,7 @@ init_base_path :: proc () {
     when ODIN_OS == .Darwin do executable_path := os.args[0]
     else when ODIN_OS == .Windows{
         executable_path, new_allocation := filepath.to_slash(os.args[0])
-        assert(!new_allocation)
+        // assert(!new_allocation)
     } else do panic("No basepath implementation for this platform!")
     
     executable_dir := filepath.dir(executable_path) 
