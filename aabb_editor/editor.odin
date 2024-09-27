@@ -7,6 +7,7 @@ import "../third-party/odin-imgui/imgui_impl_glfw"
 import "../third-party/odin-imgui/imgui_impl_opengl3"
 
 is_editor_visible : bool = true
+is_editor_settings_window_visible : bool = true
 io : ^imgui.IO = nil
 
 init_imgui :: proc() -> bool {
@@ -46,6 +47,50 @@ process_editor_input :: proc () {
     }
 }
 
+draw_editor_main_menu :: proc () {
+    if imgui.BeginMainMenuBar() {
+        if imgui.BeginMenu("File") {
+            if imgui.MenuItem("New") {
+                fmt.println("New!")
+            }
+            if imgui.MenuItem("Open") {
+                fmt.println("Open!")
+            }
+            if imgui.MenuItem("Save") {
+                fmt.println("Save!")
+            }
+            imgui.Separator()
+            if imgui.MenuItem("Close") do glfw.SetWindowShouldClose(glfw_window, true)
+
+            imgui.EndMenu()
+        }
+
+        if imgui.BeginMenu("Edit") {
+            if imgui.MenuItem("Settings") do is_editor_settings_window_visible = !is_editor_settings_window_visible
+            imgui.EndMenu()
+        }
+
+        imgui.EndMainMenuBar()
+    }
+}
+
+draw_editor_settings_window :: proc () {
+    if !is_editor_settings_window_visible do return
+    
+    // flags : imgui.WindowFlags : {.NoMove, .NoResize, .NoCollapse}
+
+    // display_size := io.DisplaySize
+    // window_pos := imgui.Vec2 {display_size.x * 0.75, 0.0}
+    // window_size := imgui.Vec2 {display_size.x * 0.25, display_size.y}
+
+    // imgui.SetNextWindowPos(window_pos)
+    // imgui.SetNextWindowSize(window_size)
+    
+    // if imgui.Begin("Settings", nil, flags) {
+    // }
+    // imgui.End()
+}
+
 draw_editor :: proc () {
     if !is_editor_visible do return
     
@@ -53,7 +98,9 @@ draw_editor :: proc () {
     imgui_impl_glfw.NewFrame()
     imgui.NewFrame()
     
-    imgui.ShowDemoWindow()
+    // imgui.ShowDemoWindow()
+    draw_editor_main_menu()
+    draw_editor_settings_window()
     
     if imgui.Begin("Window containing a quit button") {
         if imgui.Button("The quit button in question") {
