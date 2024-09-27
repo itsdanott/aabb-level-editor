@@ -7,9 +7,6 @@ import "vendor:OpenGL"
 import "core:strings"
 import "core:io"
 
-unlit_color_shader : ^shader = nil
-unlit_color_shader_color_location, unlit_color_model_location, unlit_color_view_location, unlit_color_projection_location : i32
-
 shader :: struct {
     id : u32,
 }
@@ -19,20 +16,31 @@ shader_type :: enum {
     FRAGMENT_SHADER,
 }
 
-init_global_shaders :: proc() -> bool {
+global_shader_state :: struct {
+    unlit_color_shader : ^shader,
+    unlit_color_shader_color_location, unlit_color_model_location, unlit_color_view_location, unlit_color_projection_location : i32,    
+}
+
+make_global_shader_state :: proc () -> global_shader_state {
+    return {}
+}
+
+
+init_global_shaders :: proc(state : ^global_shader_state) -> bool {
     unlit_color_shader_success : bool
-    unlit_color_shader, unlit_color_shader_success = load_shader_from_files("shaders/unlit_color.vert.glsl", "shaders/unlit_color.frag.glsl")
+    state.unlit_color_shader, unlit_color_shader_success = load_shader_from_files("shaders/unlit_color.vert.glsl", "shaders/unlit_color.frag.glsl")
     if !unlit_color_shader_success do return false
-    unlit_color_shader_color_location = OpenGL.GetUniformLocation(unlit_color_shader.id, "color")
-    unlit_color_model_location = OpenGL.GetUniformLocation(unlit_color_shader.id, "model")
-    unlit_color_view_location = OpenGL.GetUniformLocation(unlit_color_shader.id, "view")
-    unlit_color_projection_location = OpenGL.GetUniformLocation(unlit_color_shader.id, "projection")
+
+    state.unlit_color_shader_color_location = OpenGL.GetUniformLocation(state.unlit_color_shader.id, "color")
+    state.unlit_color_model_location = OpenGL.GetUniformLocation(state.unlit_color_shader.id, "model")
+    state.unlit_color_view_location = OpenGL.GetUniformLocation(state.unlit_color_shader.id, "view")
+    state.unlit_color_projection_location = OpenGL.GetUniformLocation(state.unlit_color_shader.id, "projection")
 
     return true
 }
 
-free_global_shaders :: proc() {
-    free_shader(unlit_color_shader)
+free_global_shaders :: proc(state : ^global_shader_state) {
+    free_shader(state.unlit_color_shader)
 }
 
 load_shader_source :: proc (file_path : string) -> (source: string, success: bool) {
