@@ -1,6 +1,7 @@
 package aabb_editor
 
 vec3 :: [3]f32
+vec4 :: [4]f32
 mat4 :: matrix[4,4]f32
 import "core:math/linalg"
 
@@ -14,8 +15,8 @@ aabb_brush :: struct {
     position : vec3,
 }
 
-ray :: struct {
-    origin : vec3,
+aabb :: struct {
+    min, max : vec3,
 }
 
 create_model_matrix :: proc (pos : vec3, scale : vec3) -> mat4 {
