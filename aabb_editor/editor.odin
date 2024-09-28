@@ -5,6 +5,8 @@ import "vendor:glfw"
 import imgui "../third-party/odin-imgui"
 import "../third-party/odin-imgui/imgui_impl_glfw"
 import "../third-party/odin-imgui/imgui_impl_opengl3"
+import "core:math/linalg"
+import "core:math"
 
 editor_state :: struct {
     is_editor_visible : bool,
@@ -52,11 +54,56 @@ cleanup_imgui :: proc() {
     imgui.DestroyContext()
 }
 
-process_editor_input :: proc (state: ^editor_state, cam: ^camera) {
+process_editor_input :: proc (state: ^editor_state cam: ^camera) {
     if glfw.GetMouseButton(glfw_window, 0) == glfw.PRESS {
         if !state.io.WantCaptureMouse {
             mouse_x, mouse_y := glfw.GetCursorPos(glfw_window)
-            fmt.printfln("Mouse Button pressed: X:%f, Y:%f", mouse_x, mouse_y)
+            when ODIN_OS == .Darwin {
+                x_scale, y_scale := glfw.GetWindowContentScale(glfw_window)
+                mouse_x *= f64(x_scale)
+                mouse_y *= f64(y_scale)
+            }
+            // fmt.printfln("Mouse Button pressed: X:%f, Y:%f", mouse_x, mouse_y)
+
+            // get the cursor position as world position
+            
+            //convert to ndc
+            normalized_x : f32 = 2.0 * (f32(mouse_x) / f32(framebuffer_size_x)) - 1.0
+            normalized_y : f32 = 1.0 - 2.0 * (f32(mouse_y) / f32(framebuffer_size_y))
+            
+            clip_space : vec4 = {normalized_x, normalized_y, -1.0, 1.0} // z value = -1 == near plane
+            // clip_space : vec4 = {normalized_x, normalized_y, 1.0, 1.0} // z value = 1 == far plane
+            // clip_space : vec4 = {normalized_x, normalized_y, cam.clip_near, cam.clip_far}
+            
+            inverse_projection : mat4 = linalg.matrix4_inverse_f32(cam.projection_matrix)
+            eye_space : vec4 = inverse_projection * clip_space
+            eye_space = vec4 {eye_space.x, eye_space.y, -1.0, 1.0}
+            
+            inverse_view : mat4 = linalg.matrix4_inverse_f32(cam.view_matrix)
+            world_space : vec4 = inverse_view * eye_space
+            world_pos : vec3 = world_space.xyz / world_space.w
+            
+            world_pos_snapped := vec3{ math.floor(world_pos.x),math.floor(world_pos.y), math.floor(world_pos.z)}
+            
+            // state.box1_pos = world_pos_snapped
+            
+
+            // get a ray out of the cursor position
+            ray_direction := linalg.vector_normalize(world_pos - cam.pos)
+            ray := ray {
+                origin = cam.pos,
+                direction = ray_direction,
+            }
+            fmt.println("Ray.Origin:",ray.origin, "Dir:", ray.direction)
+
+            aabb := aabb { 
+                min = state.box1_pos - state.box1_scale * 0.5,
+                max = state.box1_pos + state.box1_scale * 0.5,
+            }
+            result, is_hit := ray_aabb_intersection(ray, aabb)
+            if is_hit {
+                state.box1_pos = result.hit_point
+            }
         }
     }
 
