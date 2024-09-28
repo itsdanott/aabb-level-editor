@@ -19,8 +19,9 @@ main :: proc() {
     camera := aabb_editor.make_default_cam()
     editor_state := aabb_editor.make_editor_state()
     grid_state := aabb_editor.make_grid_state()
-    box_line_renderer := aabb_editor.make_box_line_renderer_state()
     global_shader_state := aabb_editor.make_global_shader_state()
+    box_line_renderer := aabb_editor.make_box_line_renderer_state()
+    line_renderer_state := aabb_editor.make_line_renderer_state()
 
     if !aabb_editor.init_glfw() do return
     defer glfw.Terminate()
@@ -47,6 +48,9 @@ main :: proc() {
 
     aabb_editor.init_box_line_renderer(&box_line_renderer) 
     defer aabb_editor.cleanup_box_line_renderer(&box_line_renderer)
+
+    aabb_editor.init_line_renderer(&line_renderer_state) 
+    defer aabb_editor.cleanup_line_renderer(&line_renderer_state)
     
     vertices := [?]f32 {
         //Position(XY)  TexCoord(XY)
@@ -89,7 +93,7 @@ main :: proc() {
         
         aabb_editor.update_camera_matrices(&camera)
         
-        aabb_editor.process_editor_input(&editor_state, &camera)
+        aabb_editor.process_editor_input(&editor_state, &camera, &line_renderer_state)
     
         //Draw 3d
         // {   
@@ -103,6 +107,7 @@ main :: proc() {
         // }
         aabb_editor.draw_grid(&grid_state, &editor_state, &camera)
         aabb_editor.draw_box_line_renderer(editor_state.box1_pos, editor_state.box1_scale, editor_state.box1_color, &box_line_renderer, &camera, &global_shader_state)
+        aabb_editor.draw_line_renderer(&line_renderer_state, &camera, &global_shader_state)
 
         aabb_editor.draw_editor(&editor_state, &grid_state, &camera)
 
