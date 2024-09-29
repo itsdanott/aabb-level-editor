@@ -14,7 +14,7 @@ editor_state :: struct {
     is_editor_settings_window_visible : bool,
     io : ^imgui.IO,
     box1_pos, box1_scale, box1_color : vec3,
-    was_mouse_down : bool,
+    was_mouse_down, was_alt_pressed : bool,
     mouse_pos, last_mouse_pos, mouse_delta, mouse_delta_normalized : vec2,
 }
 
@@ -73,9 +73,12 @@ update_mouse_pos :: proc (state : ^app_state) {
 
 process_editor_input :: proc (state: ^app_state) {
     update_mouse_pos(state)
+    
+    alt_pressed := glfw.GetKey(glfw_window, glfw.KEY_LEFT_ALT) == glfw.PRESS
+    if !alt_pressed && state.editor.was_alt_pressed do state.editor.was_alt_pressed = false
     mouse_button_left_press := glfw.GetMouseButton(glfw_window, glfw.MOUSE_BUTTON_LEFT) == glfw.PRESS
     mouse_button_right_press : = glfw.GetMouseButton(glfw_window, glfw.MOUSE_BUTTON_RIGHT) == glfw.PRESS
-    
+
     if mouse_button_left_press {
         if !state.editor.was_mouse_down {
             state.editor.was_mouse_down = true
@@ -98,10 +101,7 @@ process_editor_input :: proc (state: ^app_state) {
         finish_box_cursor_grabbing(state)
     }
 
-    cam_move_speed : f32 = 4.0
     cam_velocity : vec3 = {0,0,0}
-    cam_rot_factor : f32 : 90.0
-    cam_rot_mouse_sensitivity : f32 = 90.0
 
     cam_forward := state.camera.forward
     cam_right := state.camera.right
@@ -116,30 +116,50 @@ process_editor_input :: proc (state: ^app_state) {
     if glfw.GetKey(glfw_window, glfw.KEY_E) == glfw.PRESS do cam_velocity += cam_up
     
     //keyboard rotation
-    if glfw.GetKey(glfw_window, glfw.KEY_RIGHT) == glfw.PRESS do state.camera.rot = state.camera.rot * linalg.quaternion_angle_axis_f32(math.to_radians(f32(45.0) * delta_time), {0,1,0})
-    if glfw.GetKey(glfw_window, glfw.KEY_LEFT) == glfw.PRESS do state.camera.rot = state.camera.rot * linalg.quaternion_angle_axis_f32(math.to_radians(f32(-45.0) * delta_time), {0,1,0})
+    if glfw.GetKey(glfw_window, glfw.KEY_RIGHT) == glfw.PRESS do state.camera.rot = state.camera.rot * linalg.quaternion_angle_axis_f32(math.to_radians(state.camera.rot_key_sensitivity * delta_time), {0,1,0})
+    if glfw.GetKey(glfw_window, glfw.KEY_LEFT) == glfw.PRESS do state.camera.rot = state.camera.rot * linalg.quaternion_angle_axis_f32(math.to_radians(-state.camera.rot_key_sensitivity * delta_time), {0,1,0})
 
     if(linalg.vector_length(cam_velocity) > 0.2){
         cam_velocity = linalg.vector_normalize(cam_velocity)
-        state.camera.pos += cam_velocity * cam_move_speed * delta_time
+        state.camera.pos += cam_velocity * state.camera.move_speed * delta_time
     }
  
-    alt_pressed := glfw.GetKey(glfw_window, glfw.KEY_LEFT_ALT) == glfw.PRESS
-    if mouse_button_right_press && linalg.vector_length(state.editor.mouse_delta) > 0.1  {
+    if mouse_button_right_press {
         if !alt_pressed {
-
-            pitch_angle : f32 = state.editor.mouse_delta.y * cam_rot_mouse_sensitivity * delta_time
-            yaw_angle : f32 = -state.editor.mouse_delta.x * cam_rot_mouse_sensitivity * delta_time
-            
-            yaw_quat : quaternion128 = linalg.quaternion_angle_axis_f32(math.to_radians(yaw_angle), vec3{0.0, 1.0, 0.0})
-            pitch_quat : quaternion128 = linalg.quaternion_angle_axis_f32(math.to_radians(pitch_angle), state.camera.right)
-            
-            state.camera.rot = state.camera.rot * yaw_quat
-            state.camera.rot = state.camera.rot * pitch_quat
-            
-            state.camera.rot = linalg.quaternion_normalize(state.camera.rot)
+            if linalg.vector_length(state.editor.mouse_delta) > 0.0001 {
+                pitch_angle : f32 = state.editor.mouse_delta.y * state.camera.rot_mouse_sensitivity_y * delta_time
+                yaw_angle : f32 = -state.editor.mouse_delta.x * state.camera.rot_mouse_sensitivity_x * delta_time
+                
+                yaw_quat : quaternion128 = linalg.quaternion_angle_axis_f32(math.to_radians(yaw_angle), vec3{0.0, 1.0, 0.0})
+                pitch_quat : quaternion128 = linalg.quaternion_angle_axis_f32(math.to_radians(pitch_angle), state.camera.right)
+                
+                state.camera.rot = state.camera.rot * yaw_quat
+                state.camera.rot = state.camera.rot * pitch_quat
+                
+                state.camera.rot = linalg.quaternion_normalize(state.camera.rot)
+            }
         } else {
+            camera_target := linalg.lerp(state.box_cursor.min, state.box_cursor.max, 0.5)
+            if !state.editor.was_alt_pressed {
+                state.editor.was_alt_pressed = true
+                state.box_cursor.camera_distance = linalg.distance(camera_target, state.camera.pos)
+                look_quat := linalg.quaternion_look_at_f32(state.camera.pos, camera_target, vec3{0.0,1.0,0.0} )
+                state.box_cursor.camera_pitch = linalg.pitch_from_quaternion(look_quat)
+                state.box_cursor.camera_yaw = linalg.yaw_from_quaternion(look_quat)
+            } else if math.abs(glfw_scroll.y) > 0.01 do state.box_cursor.camera_distance = math.max(state.box_cursor.camera_distance + -glfw_scroll.y, 0.5)
+
+            if math.abs(state.editor.mouse_delta.x) > 0.1 do state.box_cursor.camera_yaw += state.editor.mouse_delta.x * state.camera.orbit_sensitivity * delta_time
+            if math.abs(state.editor.mouse_delta.y) > 0.1 do state.box_cursor.camera_pitch += state.editor.mouse_delta.y * state.camera.orbit_sensitivity * delta_time
+
+            pitch := state.box_cursor.camera_pitch
+            yaw := state.box_cursor.camera_yaw
             
+            orbit_x := state.box_cursor.camera_distance * math.cos_f32(pitch) * math.sin_f32(yaw)
+            orbit_y := state.box_cursor.camera_distance * math.sin_f32(pitch)
+            orbit_z := state.box_cursor.camera_distance * math.cos_f32(pitch) * math.cos_f32(yaw)
+
+            state.camera.pos = {orbit_x, orbit_y, orbit_z}
+            state.camera.rot = linalg.quaternion_look_at_f32(state.camera.pos, camera_target, vec3{0.0,1.0,0.0} )
         }
     } 
 }
@@ -193,6 +213,13 @@ draw_editor_settings_window :: proc (state : ^app_state) {
             imgui.DragFloat("Camera.Pos.X", &state.camera.pos.x)
             imgui.DragFloat("Camera.Pos.Y", &state.camera.pos.y)
             imgui.DragFloat("Camera.Pos.Z", &state.camera.pos.z)
+
+            imgui.SeparatorText("Input")
+            imgui.DragFloat("move_speed", &state.camera.move_speed)
+            imgui.DragFloat("rot_key_sensitivity", &state.camera.rot_key_sensitivity)
+            imgui.DragFloat("rot_mouse_sensitivity_x", &state.camera.rot_mouse_sensitivity_x)
+            imgui.DragFloat("rot_mouse_sensitivity_y", &state.camera.rot_mouse_sensitivity_y)
+            imgui.DragFloat("orbit_sensitivity", &state.camera.orbit_sensitivity)
             
             imgui.SeparatorText("Misc")
             imgui.DragFloat("Camera.FOV", &state.camera.fov)
@@ -248,8 +275,11 @@ draw_editor_settings_window :: proc (state : ^app_state) {
             imgui.DragFloat("BoxCursor.Max.X", &state.box_cursor.max.x)
             imgui.DragFloat("BoxCursor.Max.Y", &state.box_cursor.max.y)
             imgui.DragFloat("BoxCursor.Max.Z", &state.box_cursor.max.z)
+
+            imgui.SeparatorText("Misc")
+            imgui.ColorEdit3("Cursor.Color", &state.box_cursor.color)
             
-            imgui.SeparatorText("Grab Mode")
+            imgui.SeparatorText("Mouse Mode")
 
             if imgui.Button("MOVE") do state.box_cursor.grab_mode = .MOVE
             imgui.SameLine()

@@ -18,16 +18,18 @@ box_cursor_move_mode :: enum {
 box_cursor_state :: struct {
     grab_mode : box_cursor_grab_mode,
     move_mode : box_cursor_move_mode,
-    min, max, face_pos : vec3,
+    min, max, face_pos, color : vec3,
     is_face_grabbing, is_move_grabbing : bool,
     selected_face_index : i32,
     face_grab_axis : vec3,
+    camera_distance, camera_pitch, camera_yaw : f32,
 }
 
 make_box_cursor_state :: proc() -> box_cursor_state {
     return {
         min = {0,0,0},
         max = {1,1,1},
+        color = {1,1,1},
     }
 }
 
@@ -207,7 +209,7 @@ get_cursor_face_pos_from_face_index :: proc(face_index : i32, state : ^app_state
 }
 
 draw_box_cursor :: proc(state : ^app_state) {
-    draw_box_line_renderer_aabb(state.box_cursor.min, state.box_cursor.max, vec3{1.0, 1.0, 1.0}, state)
+    draw_box_line_renderer_aabb(state.box_cursor.min, state.box_cursor.max, state.box_cursor.color, state)
 
     switch state.box_cursor.grab_mode {
     case .MOVE:

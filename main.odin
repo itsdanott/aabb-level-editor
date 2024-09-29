@@ -85,7 +85,7 @@ main :: proc() {
     shader_texture_location := OpenGL.GetUniformLocation(shader.id, "screenTexture")
 
     for !glfw.WindowShouldClose(aabb_editor.glfw_window) {
-        OpenGL.ClearColor(0.25, 0.25, 0.5, 1.0)
+        OpenGL.ClearColor(app_state.camera.clear_color.r, app_state.camera.clear_color.g, app_state.camera.clear_color.b, 1.0)
         OpenGL.Clear(OpenGL.COLOR_BUFFER_BIT)
 
         glfw.PollEvents()        
@@ -114,5 +114,6 @@ main :: proc() {
         aabb_editor.draw_editor_ui(&app_state)
 
         glfw.SwapBuffers(aabb_editor.glfw_window)
+        aabb_editor.glfw_scroll = {0,0}
     }
 }
