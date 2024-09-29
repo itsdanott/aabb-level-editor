@@ -2,6 +2,7 @@ package aabb_editor
 
 import "core:math"
 import "core:math/linalg"
+import gl "vendor:OpenGL"
 
 camera_projection :: enum {
     PERSPECTIVE,
@@ -14,6 +15,7 @@ camera :: struct {
     rot : quaternion128,
     projection_matrix, view_matrix : mat4,
     projection : camera_projection,
+    clear_color : vec3,
 }
 
 make_default_cam :: proc () -> camera {
@@ -29,6 +31,7 @@ make_default_cam :: proc () -> camera {
         right       = right,
         up          = up,
         rot         = linalg.quaternion_from_forward_and_up_f32(forward, up),
+        clear_color  = {0.25, 0.25, 0.5},
     }
 }
 
