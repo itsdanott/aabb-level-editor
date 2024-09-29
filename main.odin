@@ -28,9 +28,7 @@ main :: proc() {
     if !aabb_editor.init_imgui(&app_state) do return
     defer aabb_editor.cleanup_imgui()
 
-    texture, texture_success := aabb_editor.load_texture("rabbyte_logo_512.png")
-    if !texture_success do return
-    defer aabb_editor.free_texture(texture)
+    defer aabb_editor.cleanup_textures(&app_state)
 
     shader, shader_success := aabb_editor.load_shader_from_files("shaders/simple.vert.glsl", "shaders/simple.frag.glsl")
     if !shader_success do return
@@ -88,7 +86,9 @@ main :: proc() {
         OpenGL.ClearColor(app_state.camera.clear_color.r, app_state.camera.clear_color.g, app_state.camera.clear_color.b, 1.0)
         OpenGL.Clear(OpenGL.COLOR_BUFFER_BIT)
 
-        glfw.PollEvents()        
+        glfw.PollEvents()  
+
+        aabb_editor.glfw_process_callbacks(&app_state)
         
         aabb_editor.update_camera_matrices(&app_state.camera)
         
