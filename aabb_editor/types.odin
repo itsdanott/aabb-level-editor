@@ -40,6 +40,7 @@ app_state :: struct {
     box_line_renderer : box_line_renderer_state,
     quad_renderer : quad_renderer_state,
     box_cursor : box_cursor_state,
+    textures : [dynamic]^texture,
 }
 
 make_app_state :: proc() -> app_state{

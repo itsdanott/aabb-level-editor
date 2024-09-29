@@ -273,6 +273,16 @@ draw_editor_settings_window :: proc (state : ^app_state) {
             }
             imgui.TreePop()
         }
+        
+        if imgui.TreeNode("Textures") {
+            for texture, index in state.textures {
+                imgui.Text("[%zu] %hux%hu (%hu channels)", texture.id, texture.width, texture.height, texture.channels)
+                imgui.Image(imgui.TextureID(uintptr(texture.id)), {128, 128})
+                imgui.Separator()
+            }
+
+            imgui.TreePop()
+        }
     }
     imgui.End()
 }
