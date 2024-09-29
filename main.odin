@@ -105,7 +105,6 @@ main :: proc() {
         //     OpenGL.DrawArrays(OpenGL.TRIANGLES, 0, 6)
         // }
         aabb_editor.draw_grid(&app_state)
-        // aabb_editor.draw_box_line_renderer(app_state.editor.box1_pos, app_state.editor.box1_scale, app_state.editor.box1_color, &app_state)
         aabb_editor.draw_line_renderer(&app_state)
 
         aabb_editor.draw_box_cursor(&app_state)
