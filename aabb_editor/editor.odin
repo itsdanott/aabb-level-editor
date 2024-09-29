@@ -195,7 +195,8 @@ draw_editor_settings_window :: proc (state : ^app_state) {
             imgui.DragFloat("Camera.Pos.Z", &state.camera.pos.z)
             
             imgui.SeparatorText("Misc")
-            imgui.DragFloat("FOV", &state.camera.fov)
+            imgui.DragFloat("Camera.FOV", &state.camera.fov)
+            imgui.ColorEdit3("Camera.ClearColor", &state.camera.clear_color)
 
             imgui.TreePop()
         }
