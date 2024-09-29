@@ -13,6 +13,7 @@ glfw_window : glfw.WindowHandle = nil
 
 framebuffer_size_x,framebuffer_size_y : i32
 framebuffer_aspect : f32
+glfw_scroll : vec2
 
 //Todo: think of a solution to avoid global variables and replace with this struct
 window_state :: struct {
@@ -37,6 +38,10 @@ glfw_framebuffer_size_callback :: proc "c" (window: glfw.WindowHandle, width, he
     OpenGL.Viewport(0,0, width, height)
 }
 
+glfw_scroll_callback :: proc "c" (window : glfw.WindowHandle, xOffset, yOffset : f64){
+    glfw_scroll.x = f32(xOffset)
+    glfw_scroll.y = f32(yOffset)
+}
 
 init_glfw_window_hints :: proc() {
     glfw.WindowHint(glfw.RESIZABLE, 1)
@@ -72,10 +77,12 @@ init_glfw_window :: proc(width, height : u16, title : string) -> bool {
 
     glfw.MakeContextCurrent(glfw_window)
     glfw.SwapInterval(1)
-    glfw.SetFramebufferSizeCallback(glfw_window, glfw_framebuffer_size_callback)
     
     OpenGL.load_up_to(int(GL_VERSION_MAJOR), int(GL_VERSION_MINOR), glfw.gl_set_proc_address)
     glfw_framebuffer_size_callback(glfw_window, c.int(width), c.int(height))
+
+    glfw.SetFramebufferSizeCallback(glfw_window, glfw_framebuffer_size_callback)
+    glfw.SetScrollCallback(glfw_window, glfw_scroll_callback)
     
     return true
 }

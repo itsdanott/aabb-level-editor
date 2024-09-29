@@ -16,6 +16,7 @@ camera :: struct {
     projection_matrix, view_matrix : mat4,
     projection : camera_projection,
     clear_color : vec3,
+    move_speed, rot_key_sensitivity, rot_mouse_sensitivity_x, rot_mouse_sensitivity_y, orbit_sensitivity : f32,
 }
 
 make_default_cam :: proc () -> camera {
@@ -32,6 +33,11 @@ make_default_cam :: proc () -> camera {
         up          = up,
         rot         = linalg.quaternion_from_forward_and_up_f32(forward, up),
         clear_color  = {0.25, 0.25, 0.5},
+        move_speed = 4.0,
+        rot_key_sensitivity = 90.0,
+        rot_mouse_sensitivity_x = 120.0,
+        rot_mouse_sensitivity_y = 90.0,
+        orbit_sensitivity = 4.0,
     }
 }
 
