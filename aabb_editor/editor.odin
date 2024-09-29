@@ -211,6 +211,12 @@ draw_editor_settings_window :: proc (state : ^app_state) {
             imgui.DragFloat("Grid.Scale.X", &state.grid.scale.x)
             imgui.DragFloat("Grid.Scale.Y", &state.grid.scale.y)
             imgui.DragFloat("Grid.Scale.Z", &state.grid.scale.z)
+
+            imgui.SeparatorText("Misc")
+            imgui.SliderFloat("Grid.Alpha", &state.grid.grid_alpha, 0.0, 1.0)
+            imgui.SliderFloat("Grid.FadeDist", &state.grid.grid_fade_dist, 2.0, 100.0)
+            imgui.ColorEdit3("Grid.Checker.Col1", &state.grid.checker_col1)
+            imgui.ColorEdit3("Grid.Checker.Col2", &state.grid.checker_col2)
             
             imgui.TreePop()
         }
