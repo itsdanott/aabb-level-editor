@@ -24,12 +24,12 @@ make_line_renderer_state :: proc () -> line_renderer_state{
     }
 }
 
-init_line_renderer :: proc (line_renderer : ^line_renderer_state) {
-    gl.GenVertexArrays(1, &line_renderer.vao)
-    gl.GenBuffers(1, &line_renderer.vbo)
+init_line_renderer :: proc (state : ^app_state) {
+    gl.GenVertexArrays(1, &state.line_renderer.vao)
+    gl.GenBuffers(1, &state.line_renderer.vbo)
 
-    gl.BindVertexArray(line_renderer.vao)
-    gl.BindBuffer(gl.ARRAY_BUFFER, line_renderer.vbo)
+    gl.BindVertexArray(state.line_renderer.vao)
+    gl.BindBuffer(gl.ARRAY_BUFFER, state.line_renderer.vbo)
     vertices := [6]vec3 {
         9.0, 2.0, 20.0,
         0.0, 0.0, 0.0,
@@ -39,35 +39,35 @@ init_line_renderer :: proc (line_renderer : ^line_renderer_state) {
     gl.EnableVertexAttribArray(0)
     gl.VertexAttribPointer(0, 3, gl.FLOAT, gl.FALSE, 3 * size_of(f32), 0)
 
-    gl.LineWidth(8)
+    gl.LineWidth(2)
     // gl.Enable(gl.LINE_SMOOTH)
-    reserve(&line_renderer.lines, max_line_render_handle_count)
+    reserve(&state.line_renderer.lines, max_line_render_handle_count)
 }
 
-cleanup_line_renderer :: proc (line_renderer : ^line_renderer_state) {
-    gl.DeleteVertexArrays(1, &line_renderer.vao)
-    gl.DeleteBuffers(1, &line_renderer.vbo)
+cleanup_line_renderer :: proc (state : ^app_state) {
+    gl.DeleteVertexArrays(1, &state.line_renderer.vao)
+    gl.DeleteBuffers(1, &state.line_renderer.vbo)
 }
 
-add_line_render_handle :: proc(handle : line_render_handle, state : ^line_renderer_state) {
-    if len(state.lines) >= max_line_render_handle_count do return
-    append(&state.lines, handle)
+add_line_render_handle :: proc(handle : line_render_handle, state : ^app_state) {
+    if len(state.line_renderer.lines) >= max_line_render_handle_count do return
+    append(&state.line_renderer.lines, handle)
 }
 
-draw_line_renderer :: proc (state : ^line_renderer_state, cam : ^camera, shader_state : ^global_shader_state) {
-    num_lines := len(state.lines)
+draw_line_renderer :: proc (state : ^app_state) {
+    num_lines := len(state.line_renderer.lines)
     if num_lines == 0 do return
     
-    gl.UseProgram(shader_state.unlit_color_shader.id)
-    gl.UniformMatrix4fv(shader_state.unlit_color_model_location, 1, false, &state.model_matrix[0][0])
-    gl.UniformMatrix4fv(shader_state.unlit_color_view_location, 1, false, &cam.view_matrix[0][0])
-    gl.UniformMatrix4fv(shader_state.unlit_color_projection_location, 1, false, &cam.projection_matrix[0][0])
+    gl.UseProgram(state.shader.unlit_color_shader.id)
+    gl.UniformMatrix4fv(state.shader.unlit_color_model_location, 1, false, &state.line_renderer.model_matrix[0][0])
+    gl.UniformMatrix4fv(state.shader.unlit_color_view_location, 1, false, &state.camera.view_matrix[0][0])
+    gl.UniformMatrix4fv(state.shader.unlit_color_projection_location, 1, false, &state.camera.projection_matrix[0][0])
 
-    gl.BindVertexArray(state.vao)
-    gl.BindBuffer(gl.ARRAY_BUFFER, state.vbo)
+    gl.BindVertexArray(state.line_renderer.vao)
+    gl.BindBuffer(gl.ARRAY_BUFFER, state.line_renderer.vbo)
 
-    for index:=0; index < len(state.lines); index+=1 {
-        line := state.lines[index]
+    for index:=0; index < len(state.line_renderer.lines); index+=1 {
+        line := state.line_renderer.lines[index]
 
         vertices := [6]f32 {
             line.from.x, line.from.y, line.from.z,
@@ -77,14 +77,14 @@ draw_line_renderer :: proc (state : ^line_renderer_state, cam : ^camera, shader_
 
         gl.BufferData(gl.ARRAY_BUFFER, size_of(f32) * 6, &vertices, gl.STATIC_DRAW)
         
-        gl.Uniform3f(shader_state.unlit_color_shader_color_location, line.color.x, line.color.y, line.color.z)
+        gl.Uniform3f(state.shader.unlit_color_shader_color_location, line.color.x, line.color.y, line.color.z)
         
         gl.DrawArrays(gl.LINES, 0, 2)
 
         new_lifetime := line.life_time - delta_time
         if new_lifetime <= 0  {
-            ordered_remove(&state.lines, index)
+            ordered_remove(&state.line_renderer.lines, index)
             index -= 1
-        } else do state.lines[index].life_time = new_lifetime
+        } else do state.line_renderer.lines[index].life_time = new_lifetime
     }
 }

@@ -26,21 +26,21 @@ make_global_shader_state :: proc () -> global_shader_state {
 }
 
 
-init_global_shaders :: proc(state : ^global_shader_state) -> bool {
+init_global_shaders :: proc(state : ^app_state) -> bool {
     unlit_color_shader_success : bool
-    state.unlit_color_shader, unlit_color_shader_success = load_shader_from_files("shaders/unlit_color.vert.glsl", "shaders/unlit_color.frag.glsl")
+    state.shader.unlit_color_shader, unlit_color_shader_success = load_shader_from_files("shaders/unlit_color.vert.glsl", "shaders/unlit_color.frag.glsl")
     if !unlit_color_shader_success do return false
 
-    state.unlit_color_shader_color_location = OpenGL.GetUniformLocation(state.unlit_color_shader.id, "color")
-    state.unlit_color_model_location = OpenGL.GetUniformLocation(state.unlit_color_shader.id, "model")
-    state.unlit_color_view_location = OpenGL.GetUniformLocation(state.unlit_color_shader.id, "view")
-    state.unlit_color_projection_location = OpenGL.GetUniformLocation(state.unlit_color_shader.id, "projection")
+    state.shader.unlit_color_shader_color_location = OpenGL.GetUniformLocation(state.shader.unlit_color_shader.id, "color")
+    state.shader.unlit_color_model_location = OpenGL.GetUniformLocation(state.shader.unlit_color_shader.id, "model")
+    state.shader.unlit_color_view_location = OpenGL.GetUniformLocation(state.shader.unlit_color_shader.id, "view")
+    state.shader.unlit_color_projection_location = OpenGL.GetUniformLocation(state.shader.unlit_color_shader.id, "projection")
 
     return true
 }
 
-free_global_shaders :: proc(state : ^global_shader_state) {
-    free_shader(state.unlit_color_shader)
+free_global_shaders :: proc(state : ^app_state) {
+    free_shader(state.shader.unlit_color_shader)
 }
 
 load_shader_source :: proc (file_path : string) -> (source: string, success: bool) {

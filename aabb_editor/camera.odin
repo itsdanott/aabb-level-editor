@@ -11,6 +11,7 @@ camera_projection :: enum {
 camera :: struct {
     fov, clip_near, clip_far : f32,
     pos, forward, up, centre : vec3,
+    rot : quaternion128,
     projection_matrix, view_matrix : mat4,
     projection : camera_projection,
 }
@@ -20,7 +21,7 @@ make_default_cam :: proc () -> camera {
         fov         = 60.0,
         clip_near   = 0.1,
         clip_far    = 100.0,
-        pos         = {9.0, 2.0, 20.0},
+        pos         = {-0.7, 2.0, 4.2},
         forward     = {0.0, 0.0, -1.0},
         up          = {0.0, 1.0, 0.0},
         centre      = {0.0, 0.0, 0.0},

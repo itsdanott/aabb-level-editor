@@ -7,6 +7,7 @@ import "../third-party/odin-imgui/imgui_impl_glfw"
 import "../third-party/odin-imgui/imgui_impl_opengl3"
 import "core:math/linalg"
 import "core:math"
+import "core:strings"
 
 editor_state :: struct {
     is_editor_visible : bool,
@@ -27,11 +28,11 @@ make_editor_state :: proc() -> editor_state {
     }
 }
 
-init_imgui :: proc(state : ^editor_state) -> bool {
+init_imgui :: proc(state : ^app_state) -> bool {
     imgui.CHECKVERSION()
     imgui.CreateContext()
-    state.io = imgui.GetIO()
-    state.io.ConfigFlags += {.NavEnableKeyboard, .NavEnableGamepad}
+    state.editor.io = imgui.GetIO()
+    state.editor.io.ConfigFlags += {.NavEnableKeyboard, .NavEnableGamepad}
     
     //Docking only
     // state.io.ConfigFlags += { .DockingEnable}
@@ -55,56 +56,94 @@ cleanup_imgui :: proc() {
     imgui.DestroyContext()
 }
 
-process_editor_input :: proc (state: ^editor_state cam: ^camera, line_renderer : ^line_renderer_state) {
-    if glfw.GetMouseButton(glfw_window, 0) == glfw.PRESS {
-        if !state.was_mouse_down {
-            state.was_mouse_down = true
-            if !state.io.WantCaptureMouse {
-                mouse_x, mouse_y := glfw.GetCursorPos(glfw_window)
-                when ODIN_OS == .Darwin {
-                    x_scale, y_scale := glfw.GetWindowContentScale(glfw_window)
-                    mouse_x *= f64(x_scale)
-                    mouse_y *= f64(y_scale)
-                }
-
-                ncd_x : f32 = 2.0 * (f32(mouse_x) / f32(framebuffer_size_x)) - 1.0
-                ndc_y : f32 = 1.0 - 2.0 * (f32(mouse_y) / f32(framebuffer_size_y))
-                
-                clip_space : vec4 = {ncd_x, ndc_y, -1.0, 1.0}
-                // clip_space : vec4 = {ncd_x, ndc_y, cam.clip_near, cam.clip_far}
-                
-                inverse_projection : mat4 = linalg.matrix4_inverse_f32(cam.projection_matrix)
-                eye_space : vec4 = inverse_projection * clip_space
-                eye_space = vec4 {eye_space.x, eye_space.y, -1.0, 1.0}
-                
-                inverse_view : mat4 = linalg.matrix4_inverse_f32(cam.view_matrix)
-                world_space : vec4 = inverse_view * eye_space
-                world_pos : vec3 = world_space.xyz / world_space.w
-                
-                // world_pos_snapped := vec3{ math.floor(world_pos.x),math.floor(world_pos.y), math.floor(world_pos.z)}
-   
-                ray_direction := linalg.vector_normalize(world_pos - cam.pos)
-                ray := ray {
-                    origin = cam.pos,
-                    direction = ray_direction,
-                }
+process_editor_input :: proc (state: ^app_state) {
+    if glfw.GetMouseButton(glfw_window, glfw.MOUSE_BUTTON_LEFT) == glfw.PRESS {
+        if !state.editor.was_mouse_down {
+            state.editor.was_mouse_down = true
+            if !state.editor.io.WantCaptureMouse {                
+                ray := get_ray_from_mouse_pos(state)
                 aabb := aabb { 
-                    min = state.box1_pos,
-                    max = state.box1_pos + state.box1_scale,
-                }
+                    min = state.box_cursor.min,
+                    max = state.box_cursor.max,
+                }                
+
                 result, is_hit := ray_aabb_intersection(ray, aabb)
-                if is_hit {
-                    fmt.println("camPos:", cam.pos, "Hit box at", result.hit_point, "t", result.t, "FaceIndex:", result.hit_face_index, "NDC-x", ncd_x, "NDC-y", ndc_y)
-                    add_line_render_handle({
-                        from = ray.origin,
-                        to = result.hit_point,
-                        color = aabb_face_index_to_color(result.hit_face_index),
-                        life_time = 1.0,
-                    }, line_renderer)
+                if is_hit do start_box_cursor_grabbing(ray, result, state)
+            }
+        } else if !state.editor.io.WantCaptureMouse && state.box_cursor.is_face_grabbing {
+            esc_key_pressed  := glfw.GetKey(glfw_window, glfw.KEY_ESCAPE) == glfw.PRESS
+            snap_key_pressed := glfw.GetKey(glfw_window, glfw.KEY_LEFT_CONTROL) == glfw.PRESS
+            
+            if esc_key_pressed {
+                state.box_cursor.is_face_grabbing = false
+            } else {           
+                switch state.box_cursor.selected_face_index {
+                case 0..<2: //X
+                    xy_intersection, has_xy_intersection := get_xy_plane_intersection_from_mouse_pos(state, state.box_cursor.min.z, false)           
+                    if has_xy_intersection do state.box_cursor.face_pos.x = snap_key_pressed ? math.floor(xy_intersection.x) : xy_intersection.x
+                case 2..<4: //Y
+                    xy_intersection, has_xy_intersection := get_xy_plane_intersection_from_mouse_pos(state, state.box_cursor.min.z, false)           
+                    if has_xy_intersection do state.box_cursor.face_pos.y = snap_key_pressed ? math.floor(xy_intersection.y) : xy_intersection.y
+                case 4..<6: //Z
+                    zy_intersection, has_zy_intersection := get_zy_plane_intersection_from_mouse_pos(state, state.box_cursor.min.x, false)           
+                    if has_zy_intersection do state.box_cursor.face_pos.z = snap_key_pressed ? math.floor(zy_intersection.z) : zy_intersection.z
+                case: panic("aabb face index out of range!")
                 }
             }
         }
-    } else do state.was_mouse_down = false
+    } else if state.editor.was_mouse_down {
+        state.editor.was_mouse_down = false
+
+        if state.box_cursor.is_face_grabbing {
+            state.box_cursor.is_face_grabbing = false
+
+            cursor := state.box_cursor.face_pos
+            min := state.box_cursor.min
+            max := state.box_cursor.max            
+
+            switch state.box_cursor.selected_face_index {
+            case AABB_FACE_INDEX_X_NEGATIVE:
+                if cursor.x < max.x do state.box_cursor.min.x = cursor.x
+                else{
+                    state.box_cursor.min.x = min.x
+                    state.box_cursor.max.x = cursor.x
+                }
+            case AABB_FACE_INDEX_X_POSITIVE:
+                if cursor.x > min.x do state.box_cursor.max.x = cursor.x
+                else{
+                    state.box_cursor.min.x = cursor.x
+                    state.box_cursor.max.x = min.x
+                } 
+
+            case AABB_FACE_INDEX_Y_NEGATIVE:
+                if cursor.y < max.y do state.box_cursor.min.y = cursor.y
+                else{
+                    state.box_cursor.min.y = min.y
+                    state.box_cursor.max.y = cursor.y
+                }
+            case AABB_FACE_INDEX_Y_POSITIVE:
+                if cursor.y > min.y do state.box_cursor.max.y = cursor.y
+                else{
+                    state.box_cursor.min.y = cursor.y
+                    state.box_cursor.max.y = min.y
+                } 
+            
+            case AABB_FACE_INDEX_Z_NEGATIVE:
+                if cursor.z < max.z do state.box_cursor.min.z = cursor.z
+                else{
+                    state.box_cursor.min.z = min.z
+                    state.box_cursor.max.z = cursor.z
+                }
+            case AABB_FACE_INDEX_Z_POSITIVE:
+                if cursor.z > min.z do state.box_cursor.max.z = cursor.z
+                else{
+                    state.box_cursor.min.z = cursor.z
+                    state.box_cursor.max.z = min.z
+                } 
+            case: panic("aabb face index out of range!")
+            }
+        }
+    }
 
     cam_move_speed : f32 = 2.0
     cam_velocity : vec3 = {0,0,0}
@@ -113,11 +152,16 @@ process_editor_input :: proc (state: ^editor_state cam: ^camera, line_renderer :
     if glfw.GetKey(glfw_window, glfw.KEY_S) == glfw.PRESS do cam_velocity.z += cam_move_speed 
     if glfw.GetKey(glfw_window, glfw.KEY_D) == glfw.PRESS do cam_velocity.x += cam_move_speed 
     if glfw.GetKey(glfw_window, glfw.KEY_A) == glfw.PRESS do cam_velocity.x -= cam_move_speed 
+    
+    // if glfw.GetMouseButton(glfw_window, glfw.MOUSE_BUTTON_RIGHT) == glfw.PRESS {
+    if glfw.GetKey(glfw_window, glfw.KEY_Q) == glfw.PRESS do state.camera.forward = {-1,0,0}
 
-    cam.pos += cam_velocity * cam_move_speed * delta_time
+
+    state.camera.pos += cam_velocity * cam_move_speed * delta_time
 }
 
-draw_editor_main_menu :: proc (state : ^editor_state) {
+//2d
+draw_editor_main_menu :: proc (state : ^app_state) {
     if imgui.BeginMainMenuBar() {
         
         if imgui.BeginMenu("File") {
@@ -137,7 +181,7 @@ draw_editor_main_menu :: proc (state : ^editor_state) {
         }
 
         if imgui.BeginMenu("Edit") {
-            if imgui.MenuItem("Settings") do state.is_editor_settings_window_visible = !state.is_editor_settings_window_visible
+            if imgui.MenuItem("Settings") do state.editor.is_editor_settings_window_visible = !state.editor.is_editor_settings_window_visible
             imgui.EndMenu()
         }
 
@@ -145,12 +189,12 @@ draw_editor_main_menu :: proc (state : ^editor_state) {
     }
 }
 
-draw_editor_settings_window :: proc (state : ^editor_state, grid : ^grid_state, cam : ^camera) {
-    if !state.is_editor_settings_window_visible do return
+draw_editor_settings_window :: proc (state : ^app_state) {
+    if !state.editor.is_editor_settings_window_visible do return
     
     flags : imgui.WindowFlags : {.NoMove, .NoResize, .NoCollapse, .NoTitleBar}
 
-    display_size := state.io.DisplaySize
+    display_size := state.editor.io.DisplaySize
     frame_height := imgui.GetFrameHeight()
     window_pos := imgui.Vec2 {display_size.x * 0.75, frame_height}
     window_size := imgui.Vec2 {display_size.x * 0.25, display_size.y - frame_height}
@@ -162,52 +206,76 @@ draw_editor_settings_window :: proc (state : ^editor_state, grid : ^grid_state, 
         if imgui.TreeNode("Camera") {
 
             imgui.SeparatorText("Position")
-            imgui.DragFloat("Camera.Pos.X", &cam.pos.x)
-            imgui.DragFloat("Camera.Pos.Y", &cam.pos.y)
-            imgui.DragFloat("Camera.Pos.Z", &cam.pos.z)
+            imgui.DragFloat("Camera.Pos.X", &state.camera.pos.x)
+            imgui.DragFloat("Camera.Pos.Y", &state.camera.pos.y)
+            imgui.DragFloat("Camera.Pos.Z", &state.camera.pos.z)
             
             imgui.SeparatorText("Misc")
-            imgui.DragFloat("FOV", &cam.fov)
+            imgui.DragFloat("FOV", &state.camera.fov)
 
             imgui.TreePop()
         }
         
         if imgui.TreeNode("Grid") {
             imgui.SeparatorText("Position")
-            imgui.DragFloat("Grid.Pos.X", &grid.pos.x)
-            imgui.DragFloat("Grid.Pos.Y", &grid.pos.y)
-            imgui.DragFloat("Grid.Pos.Z", &grid.pos.z)
+            imgui.DragFloat("Grid.Pos.X", &state.grid.pos.x)
+            imgui.DragFloat("Grid.Pos.Y", &state.grid.pos.y)
+            imgui.DragFloat("Grid.Pos.Z", &state.grid.pos.z)
 
             imgui.SeparatorText("Scale")
-            imgui.DragFloat("Grid.Scale.X", &grid.scale.x)
-            imgui.DragFloat("Grid.Scale.Y", &grid.scale.y)
-            imgui.DragFloat("Grid.Scale.Z", &grid.scale.z)
+            imgui.DragFloat("Grid.Scale.X", &state.grid.scale.x)
+            imgui.DragFloat("Grid.Scale.Y", &state.grid.scale.y)
+            imgui.DragFloat("Grid.Scale.Z", &state.grid.scale.z)
             
             imgui.TreePop()
         }
         
         if imgui.TreeNode("Box") {
             imgui.SeparatorText("Position")
-            imgui.DragFloat("Box_Pos.X", &state.box1_pos.x)
-            imgui.DragFloat("Box_Pos.Y", &state.box1_pos.y)
-            imgui.DragFloat("Box_Pos.Z", &state.box1_pos.z)
+            imgui.DragFloat("Box_Pos.X", &state.editor.box1_pos.x)
+            imgui.DragFloat("Box_Pos.Y", &state.editor.box1_pos.y)
+            imgui.DragFloat("Box_Pos.Z", &state.editor.box1_pos.z)
 
             imgui.SeparatorText("Scale")
-            imgui.DragFloat("Box_Scale.X", &state.box1_scale.x)
-            imgui.DragFloat("Box_Scale.Y", &state.box1_scale.y)
-            imgui.DragFloat("Box_Scale.Z", &state.box1_scale.z)
+            imgui.DragFloat("Box_Scale.X", &state.editor.box1_scale.x)
+            imgui.DragFloat("Box_Scale.Y", &state.editor.box1_scale.y)
+            imgui.DragFloat("Box_Scale.Z", &state.editor.box1_scale.z)
 
             imgui.SeparatorText("Misc")
-            imgui.ColorEdit3("Box_Color", &state.box1_color)
+            imgui.ColorEdit3("Box_Color", &state.editor.box1_color)
             
+            imgui.TreePop()
+        }
+        
+        if imgui.TreeNode("BoxCursor") {
+            imgui.SeparatorText("Min")
+            imgui.DragFloat("BoxCursor.Min.X", &state.box_cursor.min.x)
+            imgui.DragFloat("BoxCursor.Min.Y", &state.box_cursor.min.y)
+            imgui.DragFloat("BoxCursor.Min.Z", &state.box_cursor.min.z)
+
+            imgui.SeparatorText("Max")
+            imgui.DragFloat("BoxCursor.Max.X", &state.box_cursor.max.x)
+            imgui.DragFloat("BoxCursor.Max.Y", &state.box_cursor.max.y)
+            imgui.DragFloat("BoxCursor.Max.Z", &state.box_cursor.max.z)
+            
+            imgui.SeparatorText("Grab Mode")
+
+            if imgui.Button("MOVE") do state.box_cursor.grab_mode = .MOVE
+            imgui.SameLine()
+            if imgui.Button("FACE_SELECT") do state.box_cursor.grab_mode = .FACE_SELECT
+            imgui.SameLine()
+            if imgui.Button("FACE_EDIT") {
+                //todo; check if current face edit needs to be stopped
+                state.box_cursor.grab_mode = .FACE_EDIT
+            }
             imgui.TreePop()
         }
     }
     imgui.End()
 }
 
-draw_editor :: proc (state : ^editor_state, grid : ^grid_state, cam : ^camera) {
-    if !state.is_editor_visible do return
+draw_editor_ui :: proc (state : ^app_state) {
+    if !state.editor.is_editor_visible do return
     
     imgui_impl_opengl3.NewFrame()
     imgui_impl_glfw.NewFrame()
@@ -215,7 +283,7 @@ draw_editor :: proc (state : ^editor_state, grid : ^grid_state, cam : ^camera) {
     
     // imgui.ShowDemoWindow()
     draw_editor_main_menu(state)
-    draw_editor_settings_window(state, grid, cam)
+    draw_editor_settings_window(state)
     
     if imgui.Begin("Window containing a quit button") {
         if imgui.Button("The quit button in question") {

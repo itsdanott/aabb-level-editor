@@ -4,6 +4,7 @@ import "aabb_editor"
 import "core:fmt"
 import "vendor:glfw"
 import "vendor:OpenGL"
+import "core:math/linalg"
 
 check_for_supported_platform :: proc () {
     when !(ODIN_OS == .Darwin || ODIN_OS == .Windows || ODIN_OS == .Linux) {
@@ -15,13 +16,8 @@ main :: proc() {
     check_for_supported_platform()
 
     aabb_editor.init_base_path()
-    
-    camera := aabb_editor.make_default_cam()
-    editor_state := aabb_editor.make_editor_state()
-    grid_state := aabb_editor.make_grid_state()
-    global_shader_state := aabb_editor.make_global_shader_state()
-    box_line_renderer := aabb_editor.make_box_line_renderer_state()
-    line_renderer_state := aabb_editor.make_line_renderer_state()
+
+    app_state := aabb_editor.make_app_state()
 
     if !aabb_editor.init_glfw() do return
     defer glfw.Terminate()
@@ -29,7 +25,7 @@ main :: proc() {
     if !aabb_editor.init_glfw_window(1280, 768, "AABB Level Editor") do return
     defer glfw.DestroyWindow(aabb_editor.glfw_window)
     
-    if !aabb_editor.init_imgui(&editor_state) do return
+    if !aabb_editor.init_imgui(&app_state) do return
     defer aabb_editor.cleanup_imgui()
 
     texture, texture_success := aabb_editor.load_texture("rabbyte_logo_512.png")
@@ -40,17 +36,20 @@ main :: proc() {
     if !shader_success do return
     defer aabb_editor.free_shader(shader)
     
-    if !aabb_editor.init_global_shaders(&global_shader_state) do return
-    defer aabb_editor.free_global_shaders(&global_shader_state)
+    if !aabb_editor.init_global_shaders(&app_state) do return
+    defer aabb_editor.free_global_shaders(&app_state)
 
-    if !aabb_editor.init_grid(&grid_state) do return
-    defer aabb_editor.cleanup_grid(&grid_state)
+    if !aabb_editor.init_grid(&app_state) do return
+    defer aabb_editor.cleanup_grid(&app_state)
 
-    aabb_editor.init_box_line_renderer(&box_line_renderer) 
-    defer aabb_editor.cleanup_box_line_renderer(&box_line_renderer)
+    aabb_editor.init_box_line_renderer(&app_state) 
+    defer aabb_editor.cleanup_box_line_renderer(&app_state)
 
-    aabb_editor.init_line_renderer(&line_renderer_state) 
-    defer aabb_editor.cleanup_line_renderer(&line_renderer_state)
+    aabb_editor.init_line_renderer(&app_state) 
+    defer aabb_editor.cleanup_line_renderer(&app_state)
+
+    aabb_editor.init_quad_renderer(&app_state)
+    defer aabb_editor.cleanup_quad_renderer(&app_state)
     
     vertices := [?]f32 {
         //Position(XY)  TexCoord(XY)
@@ -91,9 +90,9 @@ main :: proc() {
 
         glfw.PollEvents()        
         
-        aabb_editor.update_camera_matrices(&camera)
+        aabb_editor.update_camera_matrices(&app_state.camera)
         
-        aabb_editor.process_editor_input(&editor_state, &camera, &line_renderer_state)
+        aabb_editor.process_editor_input(&app_state)
     
         //Draw 3d
         // {   
@@ -105,11 +104,14 @@ main :: proc() {
         //     OpenGL.BindVertexArray(vao)
         //     OpenGL.DrawArrays(OpenGL.TRIANGLES, 0, 6)
         // }
-        aabb_editor.draw_grid(&grid_state, &editor_state, &camera)
-        aabb_editor.draw_box_line_renderer(editor_state.box1_pos, editor_state.box1_scale, editor_state.box1_color, &box_line_renderer, &camera, &global_shader_state)
-        aabb_editor.draw_line_renderer(&line_renderer_state, &camera, &global_shader_state)
+        aabb_editor.draw_grid(&app_state)
+        // aabb_editor.draw_box_line_renderer(app_state.editor.box1_pos, app_state.editor.box1_scale, app_state.editor.box1_color, &app_state)
+        aabb_editor.draw_line_renderer(&app_state)
 
-        aabb_editor.draw_editor(&editor_state, &grid_state, &camera)
+        aabb_editor.draw_box_cursor(&app_state)
+
+        //2d
+        aabb_editor.draw_editor_ui(&app_state)
 
         glfw.SwapBuffers(aabb_editor.glfw_window)
     }
