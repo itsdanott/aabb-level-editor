@@ -192,15 +192,18 @@ draw_editor_main_menu :: proc (state : ^app_state) {
 draw_editor_settings_window :: proc (state : ^app_state) {
     if !state.editor.is_editor_settings_window_visible do return
     
-    flags : imgui.WindowFlags : {.NoMove, .NoResize, .NoCollapse, .NoTitleBar}
+    // Docking-Only
+    flags : imgui.WindowFlags : {.NoTitleBar}
+    // No-Docking Only
+    // flags : imgui.WindowFlags : {.NoMove, .NoResize, .NoCollapse, .NoTitleBar}
 
-    display_size := state.editor.io.DisplaySize
-    frame_height := imgui.GetFrameHeight()
-    window_pos := imgui.Vec2 {display_size.x * 0.75, frame_height}
-    window_size := imgui.Vec2 {display_size.x * 0.25, display_size.y - frame_height}
+    // display_size := state.editor.io.DisplaySize
+    // frame_height := imgui.GetFrameHeight()
+    // window_pos := imgui.Vec2 {display_size.x * 0.75, frame_height}
+    // window_size := imgui.Vec2 {display_size.x * 0.25, display_size.y - frame_height}
 
-    imgui.SetNextWindowPos(window_pos)
-    imgui.SetNextWindowSize(window_size)
+    // imgui.SetNextWindowPos(window_pos)
+    // imgui.SetNextWindowSize(window_size)
     
     if imgui.Begin("Settings", nil, flags) {
         if imgui.TreeNode("Camera") {
