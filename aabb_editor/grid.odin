@@ -58,7 +58,8 @@ cleanup_grid :: proc(state : ^app_state) {
 }
 
 draw_grid :: proc(state : ^app_state) {
-    state.grid.pos = {state.editor.box1_pos.x - state.grid.scale.x * 0.5, math.floor(state.editor.box1_pos.y), state.editor.box1_pos.z - state.grid.scale.z * 0.5}
+    // state.grid.pos = {state.editor.box1_pos.x - state.grid.scale.x * 0.5, math.floor(state.editor.box1_pos.y), state.editor.box1_pos.z - state.grid.scale.z * 0.5}
+    state.grid.pos = vec3{state.camera.pos.x - state.grid.scale.x * 0.5, math.floor(state.editor.box1_pos.y), state.camera.pos.z- state.grid.scale.z * 0.5}
     model : mat4 = create_model_matrix(state.grid.pos, state.grid.scale)
     
     gl.Enable(gl.BLEND)

@@ -25,20 +25,10 @@ get_snapped_world_pos_from_mouse_pos :: proc(state : ^app_state) -> vec3 {
     return world_pos_snapped
 }
 
-get_mouse_pos :: proc () -> (mouse_x, mouse_y : f32) {
-    mouse_x64, mouse_y64 := glfw.GetCursorPos(glfw_window)
-    when ODIN_OS == .Darwin {
-        x_scale, y_scale := glfw.GetWindowContentScale(glfw_window)
-        mouse_x64 *= f64(x_scale)
-        mouse_y64 *= f64(y_scale)
-    }
-    return f32(mouse_x64), f32(mouse_y64)
-}
-
 get_world_space_from_mouse_pos :: proc(state : ^app_state) -> vec4 {
-    mouse_x, mouse_y := get_mouse_pos()
-    ncd_x : f32 = 2.0 * (f32(mouse_x) / f32(framebuffer_size_x)) - 1.0
-    ndc_y : f32 = 1.0 - 2.0 * (f32(mouse_y) / f32(framebuffer_size_y))
+    mouse_pos := state.editor.mouse_pos
+    ncd_x : f32 = 2.0 * (mouse_pos.x / f32(framebuffer_size_x)) - 1.0
+    ndc_y : f32 = 1.0 - 2.0 * (mouse_pos.y / f32(framebuffer_size_y))
     
     clip_space : vec4 = {ncd_x, ndc_y, -1.0, 1.0}
     inverse_projection : mat4 = linalg.matrix4_inverse_f32(state.camera.projection_matrix)
