@@ -13,7 +13,6 @@ editor_state :: struct {
     is_editor_visible : bool,
     is_editor_settings_window_visible : bool,
     io : ^imgui.IO,
-    box1_pos, box1_scale, box1_color : vec3,
     was_mouse_down, was_alt_pressed : bool,
     mouse_pos, last_mouse_pos, mouse_delta, mouse_delta_normalized : vec2,
 }
@@ -23,9 +22,6 @@ make_editor_state :: proc() -> editor_state {
         is_editor_visible = true,
         is_editor_settings_window_visible = true,
         io = nil,
-        box1_pos = {0,0,0},  
-        box1_scale = {1,1,1},
-        box1_color = {0.5,1,0.5},
     }
 }
 
@@ -244,23 +240,6 @@ draw_editor_settings_window :: proc (state : ^app_state) {
             imgui.SliderFloat("Grid.FadeDist", &state.grid.grid_fade_dist, 2.0, 100.0)
             imgui.ColorEdit3("Grid.Checker.Col1", &state.grid.checker_col1)
             imgui.ColorEdit3("Grid.Checker.Col2", &state.grid.checker_col2)
-            
-            imgui.TreePop()
-        }
-        
-        if imgui.TreeNode("Box") {
-            imgui.SeparatorText("Position")
-            imgui.DragFloat("Box_Pos.X", &state.editor.box1_pos.x)
-            imgui.DragFloat("Box_Pos.Y", &state.editor.box1_pos.y)
-            imgui.DragFloat("Box_Pos.Z", &state.editor.box1_pos.z)
-
-            imgui.SeparatorText("Scale")
-            imgui.DragFloat("Box_Scale.X", &state.editor.box1_scale.x)
-            imgui.DragFloat("Box_Scale.Y", &state.editor.box1_scale.y)
-            imgui.DragFloat("Box_Scale.Z", &state.editor.box1_scale.z)
-
-            imgui.SeparatorText("Misc")
-            imgui.ColorEdit3("Box_Color", &state.editor.box1_color)
             
             imgui.TreePop()
         }
