@@ -70,79 +70,13 @@ process_editor_input :: proc (state: ^app_state) {
                 result, is_hit := ray_aabb_intersection(ray, aabb)
                 if is_hit do start_box_cursor_grabbing(ray, result, state)
             }
-        } else if !state.editor.io.WantCaptureMouse && state.box_cursor.is_face_grabbing {
-            esc_key_pressed  := glfw.GetKey(glfw_window, glfw.KEY_ESCAPE) == glfw.PRESS
-            snap_key_pressed := glfw.GetKey(glfw_window, glfw.KEY_LEFT_CONTROL) == glfw.PRESS
-            
-            if esc_key_pressed {
-                state.box_cursor.is_face_grabbing = false
-            } else {           
-                switch state.box_cursor.selected_face_index {
-                case 0..<2: //X
-                    xy_intersection, has_xy_intersection := get_xy_plane_intersection_from_mouse_pos(state, state.box_cursor.min.z, false)           
-                    if has_xy_intersection do state.box_cursor.face_pos.x = snap_key_pressed ? math.floor(xy_intersection.x) : xy_intersection.x
-                case 2..<4: //Y
-                    xy_intersection, has_xy_intersection := get_xy_plane_intersection_from_mouse_pos(state, state.box_cursor.min.z, false)           
-                    if has_xy_intersection do state.box_cursor.face_pos.y = snap_key_pressed ? math.floor(xy_intersection.y) : xy_intersection.y
-                case 4..<6: //Z
-                    zy_intersection, has_zy_intersection := get_zy_plane_intersection_from_mouse_pos(state, state.box_cursor.min.x, false)           
-                    if has_zy_intersection do state.box_cursor.face_pos.z = snap_key_pressed ? math.floor(zy_intersection.z) : zy_intersection.z
-                case: panic("aabb face index out of range!")
-                }
-            }
+        } else if !state.editor.io.WantCaptureMouse {
+            update_box_cursor_grabbing(state)
         }
     } else if state.editor.was_mouse_down {
         state.editor.was_mouse_down = false
 
-        if state.box_cursor.is_face_grabbing {
-            state.box_cursor.is_face_grabbing = false
-
-            cursor := state.box_cursor.face_pos
-            min := state.box_cursor.min
-            max := state.box_cursor.max            
-
-            switch state.box_cursor.selected_face_index {
-            case AABB_FACE_INDEX_X_NEGATIVE:
-                if cursor.x < max.x do state.box_cursor.min.x = cursor.x
-                else{
-                    state.box_cursor.min.x = min.x
-                    state.box_cursor.max.x = cursor.x
-                }
-            case AABB_FACE_INDEX_X_POSITIVE:
-                if cursor.x > min.x do state.box_cursor.max.x = cursor.x
-                else{
-                    state.box_cursor.min.x = cursor.x
-                    state.box_cursor.max.x = min.x
-                } 
-
-            case AABB_FACE_INDEX_Y_NEGATIVE:
-                if cursor.y < max.y do state.box_cursor.min.y = cursor.y
-                else{
-                    state.box_cursor.min.y = min.y
-                    state.box_cursor.max.y = cursor.y
-                }
-            case AABB_FACE_INDEX_Y_POSITIVE:
-                if cursor.y > min.y do state.box_cursor.max.y = cursor.y
-                else{
-                    state.box_cursor.min.y = cursor.y
-                    state.box_cursor.max.y = min.y
-                } 
-            
-            case AABB_FACE_INDEX_Z_NEGATIVE:
-                if cursor.z < max.z do state.box_cursor.min.z = cursor.z
-                else{
-                    state.box_cursor.min.z = min.z
-                    state.box_cursor.max.z = cursor.z
-                }
-            case AABB_FACE_INDEX_Z_POSITIVE:
-                if cursor.z > min.z do state.box_cursor.max.z = cursor.z
-                else{
-                    state.box_cursor.min.z = cursor.z
-                    state.box_cursor.max.z = min.z
-                } 
-            case: panic("aabb face index out of range!")
-            }
-        }
+        finish_box_cursor_grabbing(state)
     }
 
     cam_move_speed : f32 = 2.0
@@ -160,7 +94,7 @@ process_editor_input :: proc (state: ^app_state) {
     state.camera.pos += cam_velocity * cam_move_speed * delta_time
 }
 
-//2d
+//2d-------------------------------------------------------------------------------------------------------------------
 draw_editor_main_menu :: proc (state : ^app_state) {
     if imgui.BeginMainMenuBar() {
         
