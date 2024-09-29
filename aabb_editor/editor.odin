@@ -31,13 +31,13 @@ init_imgui :: proc(state : ^app_state) -> bool {
     state.editor.io = imgui.GetIO()
     state.editor.io.ConfigFlags += {.NavEnableKeyboard, .NavEnableGamepad}
     
-    //Docking only
-    // state.io.ConfigFlags += { .DockingEnable}
-    // state.io.ConfigFlags += { .ViewportsEnable}
-    // style := imgui.GetStyle()
-    // style.WindowRounding = 0
-    // style.Colors[imgui.Col.WindowBg].w = 1
-    //
+    // Docking only
+    state.editor.io.ConfigFlags += { .DockingEnable}
+    state.editor.io.ConfigFlags += { .ViewportsEnable}
+    style := imgui.GetStyle()
+    style.WindowRounding = 0
+    style.Colors[imgui.Col.WindowBg].w = 1
+    
 
     imgui.StyleColorsDark()
 
@@ -285,20 +285,13 @@ draw_editor_ui :: proc (state : ^app_state) {
     draw_editor_main_menu(state)
     draw_editor_settings_window(state)
     
-    if imgui.Begin("Window containing a quit button") {
-        if imgui.Button("The quit button in question") {
-            glfw.SetWindowShouldClose(glfw_window, true)
-        }
-    }
-    imgui.End()
-    
     imgui.Render()
     imgui_impl_opengl3.RenderDrawData(imgui.GetDrawData())
     
-    //Docking only
-    // backup_current_window := glfw.GetCurrentContext()
-    // imgui.UpdatePlatformWindows()
-    // imgui.RenderPlatformWindowsDefault()
-    // glfw.MakeContextCurrent(backup_current_window)
-    //
+    // Docking only
+    backup_current_window := glfw.GetCurrentContext()
+    imgui.UpdatePlatformWindows()
+    imgui.RenderPlatformWindowsDefault()
+    glfw.MakeContextCurrent(backup_current_window)
+    
 }
