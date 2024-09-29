@@ -9,8 +9,15 @@ box_cursor_grab_mode :: enum {
     FACE_SELECT,
     FACE_EDIT,
 }
+
+box_cursor_move_mode :: enum {
+    FACE_AXIS,
+    PLANE,
+}
+
 box_cursor_state :: struct {
     grab_mode : box_cursor_grab_mode,
+    move_mode : box_cursor_move_mode,
     min, max, face_pos : vec3,
     is_face_grabbing, is_move_grabbing : bool,
     selected_face_index : i32,
