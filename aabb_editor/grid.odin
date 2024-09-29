@@ -10,11 +10,20 @@ grid_state :: struct {
     shader_view_location : i32,
     shader_projection_location : i32,
     shader_view_pos_location : i32,
+    shader_grid_alpha_location : i32,
+    shader_checker_col1_location, shader_checker_col2_location : i32,
+    shader_grid_fade_dist_location : i32,
+    checker_col1, checker_col2 : vec3, 
+    grid_alpha, grid_fade_dist : f32,
 }
 
 make_grid_state :: proc() -> grid_state {
     return grid_state{
-        scale = {32.0, 1.0, 32.0},
+        scale = {100.0, 1.0, 100.0},
+        grid_alpha = 0.125,
+        grid_fade_dist = 32.0,
+        checker_col1 = {0,0,0},
+        checker_col2 = {1,1,1},
     }
 }
 
@@ -27,6 +36,11 @@ init_grid :: proc(state : ^app_state) -> bool {
     state.grid.shader_view_location = gl.GetUniformLocation(state.grid.shader.id, "view")
     state.grid.shader_projection_location = gl.GetUniformLocation(state.grid.shader.id, "projection")
     state.grid.shader_view_pos_location = gl.GetUniformLocation(state.grid.shader.id, "viewPos")
+    state.grid.shader_view_pos_location = gl.GetUniformLocation(state.grid.shader.id, "viewPos")
+    state.grid.shader_grid_alpha_location = gl.GetUniformLocation(state.grid.shader.id, "gridAlpha")
+    state.grid.shader_checker_col1_location = gl.GetUniformLocation(state.grid.shader.id, "checkerColor1")
+    state.grid.shader_checker_col2_location = gl.GetUniformLocation(state.grid.shader.id, "checkerColor2")
+    state.grid.shader_grid_fade_dist_location = gl.GetUniformLocation(state.grid.shader.id, "gridFadeDist")
 
     vertices := [?]f32 {
         0.0, 0.0, 0.0,
@@ -69,6 +83,10 @@ draw_grid :: proc(state : ^app_state) {
     gl.UniformMatrix4fv(state.grid.shader_view_location, 1, false, &state.camera.view_matrix[0][0])
     gl.UniformMatrix4fv(state.grid.shader_projection_location, 1, false, &state.camera.projection_matrix[0][0])
     gl.Uniform3f(state.grid.shader_view_pos_location, state.camera.pos.x, state.camera.pos.y, state.camera.pos.z)
+    gl.Uniform3f(state.grid.shader_checker_col1_location, state.grid.checker_col1.r,state.grid.checker_col1.g, state.grid.checker_col1.b)
+    gl.Uniform3f(state.grid.shader_checker_col2_location, state.grid.checker_col2.r,state.grid.checker_col2.g, state.grid.checker_col2.b)
+    gl.Uniform1f(state.grid.shader_grid_alpha_location, state.grid.grid_alpha)
+    gl.Uniform1f(state.grid.shader_grid_fade_dist_location, state.grid.grid_fade_dist)
     gl.BindVertexArray(state.grid.vao)
     gl.DrawArrays(gl.TRIANGLES, 0, 6)
     gl.Disable(gl.BLEND)
