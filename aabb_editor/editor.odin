@@ -116,7 +116,7 @@ process_editor_input :: proc (state: ^app_state) {
     if mouse_button_right_press {
         if !alt_pressed {
             if linalg.vector_length(state.editor.mouse_delta) > 0.0001 {
-                pitch_angle : f32 = state.editor.mouse_delta.y * state.camera.rot_mouse_sensitivity_y * delta_time
+                pitch_angle : f32 = -state.editor.mouse_delta.y * state.camera.rot_mouse_sensitivity_y * delta_time
                 yaw_angle : f32 = -state.editor.mouse_delta.x * state.camera.rot_mouse_sensitivity_x * delta_time
                 
                 yaw_quat : quaternion128 = linalg.quaternion_angle_axis_f32(math.to_radians(yaw_angle), vec3{0.0, 1.0, 0.0})
@@ -135,7 +135,7 @@ process_editor_input :: proc (state: ^app_state) {
                 look_quat := linalg.quaternion_look_at_f32(state.camera.pos, camera_target, vec3{0.0,1.0,0.0} )
                 state.box_cursor.camera_pitch = linalg.pitch_from_quaternion(look_quat)
                 state.box_cursor.camera_yaw = linalg.yaw_from_quaternion(look_quat)
-            } else if math.abs(glfw_scroll.y) > 0.01 do state.box_cursor.camera_distance = math.max(state.box_cursor.camera_distance + -glfw_scroll.y, 0.5)
+            } else if math.abs(glfw_scroll.y) > 0.01 do state.box_cursor.camera_distance = math.max(state.box_cursor.camera_distance -glfw_scroll.y, 0.5)
 
             if math.abs(state.editor.mouse_delta.x) > 0.1 do state.box_cursor.camera_yaw += state.editor.mouse_delta.x * state.camera.orbit_sensitivity * delta_time
             if math.abs(state.editor.mouse_delta.y) > 0.1 do state.box_cursor.camera_pitch += state.editor.mouse_delta.y * state.camera.orbit_sensitivity * delta_time
