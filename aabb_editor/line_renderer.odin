@@ -39,7 +39,10 @@ init_line_renderer :: proc (state : ^app_state) {
     gl.EnableVertexAttribArray(0)
     gl.VertexAttribPointer(0, 3, gl.FLOAT, gl.FALSE, 3 * size_of(f32), 0)
 
-    gl.LineWidth(2)
+
+    when ODIN_OS == .Windows || ODIN_OS == .Linux {
+        gl.LineWidth(2)
+    }
     // gl.Enable(gl.LINE_SMOOTH)
     reserve(&state.line_renderer.lines, max_line_render_handle_count)
 }
