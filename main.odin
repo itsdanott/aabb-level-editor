@@ -27,7 +27,7 @@ main :: proc() {
     
     if !aabb_editor.init_imgui(&app_state) do return
     defer aabb_editor.cleanup_imgui()
-
+    
     defer aabb_editor.cleanup_textures(&app_state)
 
     shader, shader_success := aabb_editor.load_shader_from_files("shaders/simple.vert.glsl", "shaders/simple.frag.glsl")
@@ -48,6 +48,10 @@ main :: proc() {
 
     aabb_editor.init_quad_renderer(&app_state)
     defer aabb_editor.cleanup_quad_renderer(&app_state)
+
+    aabb_editor.init_brush_renderer(&app_state)
+    defer aabb_editor.cleanup_brush_renderer(&app_state)
+    defer aabb_editor.cleanup_brushes(&app_state)
     
     vertices := [?]f32 {
         //Position(XY)  TexCoord(XY)
@@ -84,7 +88,7 @@ main :: proc() {
 
     for !glfw.WindowShouldClose(aabb_editor.glfw_window) {
         OpenGL.ClearColor(app_state.camera.clear_color.r, app_state.camera.clear_color.g, app_state.camera.clear_color.b, 1.0)
-        OpenGL.Clear(OpenGL.COLOR_BUFFER_BIT)
+        OpenGL.Clear(OpenGL.COLOR_BUFFER_BIT | OpenGL.DEPTH_BUFFER_BIT)
 
         glfw.PollEvents()  
 
@@ -105,6 +109,7 @@ main :: proc() {
         //     OpenGL.DrawArrays(OpenGL.TRIANGLES, 0, 6)
         // }
         aabb_editor.draw_grid(&app_state)
+        aabb_editor.draw_brushes(&app_state)
         aabb_editor.draw_line_renderer(&app_state)
 
         aabb_editor.draw_box_cursor(&app_state)

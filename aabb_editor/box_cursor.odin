@@ -4,8 +4,9 @@ import "core:fmt"
 import "vendor:glfw"
 import "core:math"
 
-box_cursor_grab_mode :: enum {
+box_cursor_mouse_mode :: enum {
     MOVE,
+    BRUSH_SELECT,
     FACE_SELECT,
     FACE_EDIT,
 }
@@ -16,7 +17,7 @@ box_cursor_move_mode :: enum {
 }
 
 box_cursor_state :: struct {
-    grab_mode : box_cursor_grab_mode,
+    mouse_mode : box_cursor_mouse_mode,
     move_mode : box_cursor_move_mode,
     min, max, face_pos, color : vec3,
     is_face_grabbing, is_move_grabbing : bool,
@@ -34,18 +35,49 @@ make_box_cursor_state :: proc() -> box_cursor_state {
 }
 
 //start grab ----------------------------------------------------------------------------------------------------------
-start_box_cursor_grabbing :: proc (ray : ray, raycast_result : ray_aabb_intersection_result, state : ^app_state) {
-    state.box_cursor.selected_face_index = raycast_result.hit_face_index
-    switch state.box_cursor.grab_mode {
+
+start_box_cursor_mouse_click :: proc (state : ^app_state) {
+    ray := get_ray_from_mouse_pos(state)
+    result : ray_aabb_intersection_result 
+    is_hit : bool
+    switch state.box_cursor.mouse_mode{
+    case .MOVE, .FACE_SELECT, .FACE_EDIT:
+        aabb := aabb { 
+            min = state.box_cursor.min,
+            max = state.box_cursor.max,
+        }                
+        result, is_hit = ray_aabb_intersection(ray, aabb)
+        if is_hit do state.box_cursor.selected_face_index = result.hit_face_index
+    case .BRUSH_SELECT:
+        for brush in state.brushes {
+            aabb := aabb { 
+                min = brush.min,
+                max = brush.max,
+            }                
+            result, is_hit = ray_aabb_intersection(ray, aabb)
+            if is_hit {
+                select_brush(brush, state)
+                return
+            }
+        }
+
+        deselect_brush(state)
+    }
+    
+    if !is_hit do return
+
+    switch state.box_cursor.mouse_mode {
     case .MOVE:
         start_box_cursor_move(state.box_cursor.selected_face_index, state)
+    case .BRUSH_SELECT:
+        return
     case .FACE_SELECT:
         start_box_cursor_face_select(state.box_cursor.selected_face_index, state)
     case .FACE_EDIT:
         fmt.print("Start face editing")
-        start_box_cursor_face_grabbing(ray, raycast_result, state)
+        start_box_cursor_face_grabbing(ray, result, state)
     case:
-        fmt.panicf("box_cursor_grab_mode not implemented: %s", state.box_cursor.grab_mode)
+        fmt.panicf("box_cursor_mouse_mode not implemented: %s", state.box_cursor.mouse_mode)
     }
 }
 
@@ -76,13 +108,15 @@ start_box_cursor_face_grabbing :: proc (ray : ray, raycast_result : ray_aabb_int
 
 //update grab---------------------------------------------------------------------------------------------------------------
 update_box_cursor_grabbing :: proc (state : ^app_state) {
-    switch state.box_cursor.grab_mode{
+    switch state.box_cursor.mouse_mode{
     case .MOVE:
         update_box_cursor_move_grab(state)
     case .FACE_SELECT:
         return
     case .FACE_EDIT:
         update_box_cursor_face_edit(state)
+    case .BRUSH_SELECT:
+        return
     }
 }
 
@@ -129,9 +163,11 @@ update_box_cursor_face_edit :: proc (state : ^app_state){
 
 //finish grab-------------------------------------------------------------------------------------------------------------
 finish_box_cursor_grabbing :: proc(state : ^app_state) {
-    switch state.box_cursor.grab_mode {
+    switch state.box_cursor.mouse_mode {
     case .MOVE:
         return
+    case .BRUSH_SELECT:
+            return
     case .FACE_SELECT:
         return
     case .FACE_EDIT:
@@ -211,8 +247,10 @@ get_cursor_face_pos_from_face_index :: proc(face_index : i32, state : ^app_state
 draw_box_cursor :: proc(state : ^app_state) {
     draw_box_line_renderer_aabb(state.box_cursor.min, state.box_cursor.max, state.box_cursor.color, state)
 
-    switch state.box_cursor.grab_mode {
+    switch state.box_cursor.mouse_mode {
     case .MOVE:
+        return
+    case .BRUSH_SELECT:
         return
     case .FACE_SELECT:
         draw_box_cursor_face_select(state)
@@ -230,7 +268,8 @@ draw_box_cursor_face_select :: proc(state : ^app_state) {
         pos = state.box_cursor.face_pos,
         color = state.box_cursor.face_grab_axis,
         scale = scale,
-        rot = rot,            
+        rot = rot,
+        alpha = 0.5,  
     }
     draw_quad_renderer(quad, state)
 }
@@ -246,7 +285,8 @@ draw_box_cursor_face_grabbing :: proc(state : ^app_state) {
         pos = state.box_cursor.face_pos,
         color = state.box_cursor.face_grab_axis,
         scale = scale,
-        rot = rot,            
+        rot = rot,    
+        alpha = 0.75,        
     }
     draw_quad_renderer(quad, state)
 }
