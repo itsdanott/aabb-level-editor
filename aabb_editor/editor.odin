@@ -78,15 +78,8 @@ process_editor_input :: proc (state: ^app_state) {
     if mouse_button_left_press {
         if !state.editor.was_mouse_down {
             state.editor.was_mouse_down = true
-            if !state.editor.io.WantCaptureMouse {                
-                ray := get_ray_from_mouse_pos(state)
-                aabb := aabb { 
-                    min = state.box_cursor.min,
-                    max = state.box_cursor.max,
-                }                
-
-                result, is_hit := ray_aabb_intersection(ray, aabb)
-                if is_hit do start_box_cursor_grabbing(ray, result, state)
+            if !state.editor.io.WantCaptureMouse {        
+                start_box_cursor_mouse_click(state)    
             }
         } else if !state.editor.io.WantCaptureMouse {
             update_box_cursor_grabbing(state)
@@ -262,22 +255,63 @@ draw_editor_settings_window :: proc (state : ^app_state) {
             imgui.ColorEdit3("Cursor.Color", &state.box_cursor.color)
             
             imgui.SeparatorText("Mouse Mode")
-
-            if imgui.Button("MOVE") do state.box_cursor.grab_mode = .MOVE
+            if imgui.Button("MOVE") do state.box_cursor.mouse_mode = .MOVE
             imgui.SameLine()
-            if imgui.Button("FACE_SELECT") do state.box_cursor.grab_mode = .FACE_SELECT
+            if imgui.Button("BRUSH SELECT") do state.box_cursor.mouse_mode = .BRUSH_SELECT
+            imgui.SameLine()
+            if imgui.Button("FACE_SELECT") do state.box_cursor.mouse_mode = .FACE_SELECT
             imgui.SameLine()
             if imgui.Button("FACE_EDIT") {
                 //todo; check if current face edit needs to be stopped
-                state.box_cursor.grab_mode = .FACE_EDIT
+                state.box_cursor.mouse_mode = .FACE_EDIT
             }
+
+            imgui.SeparatorText("Submit")
+            if imgui.Button("Create Brush") {
+                create_brush_from_box_cursor(state)
+            }
+            
             imgui.TreePop()
         }
+
+        //TODO:
+        // if imgui.TreeNode("Brush") {
+
+        //     imgui.TreePop()
+        // }
         
         if imgui.TreeNode("Textures") {
+            if imgui.Button("Generate Texture Array") {
+                generate_texture_array(state)
+            }
             for texture, index in state.textures {
-                imgui.Text("[%zu] %hux%hu (%hu channels)", texture.id, texture.width, texture.height, texture.channels)
+                imgui.Text("[%zu] %dx%d (%hu channels)", texture.id, texture.width, texture.height, texture.channels)
                 imgui.Image(imgui.TextureID(uintptr(texture.id)), {128, 128})
+
+                if texture.is_in_array && texture.array_index > -1 {
+                    if state.selected_brush != nil {
+                        
+                        imgui.SeparatorText("Assign Texture")
+                        button_label_entire := fmt.aprintf("To all Brush faces ##%v", index)
+                        if imgui.Button(strings.clone_to_cstring(button_label_entire)) {
+                            fmt.printfln("Assigning texture array index %v to brush!", texture.array_index)
+                            assign_texture_to_brush(state.selected_brush, texture.array_index)
+                        }
+
+                        if state.box_cursor.mouse_mode == .FACE_SELECT {
+                            button_label_face := fmt.aprintf("Selected Brush Face ##%v", index)
+                            if imgui.Button(strings.clone_to_cstring(button_label_face)) {
+                                fmt.printfln("Assigning texture array index %v to brush face-index:", texture.array_index, state.box_cursor.selected_face_index)
+                                assign_texture_to_brush_face(state.selected_brush, texture.array_index, state.box_cursor.selected_face_index)
+                            }
+                        }
+                    }
+                    imgui.Separator()
+                    imgui.Text("Array-Index: %d", texture.array_index)
+                }
+
+                checkbox_label := fmt.aprintf("in_array##%v", index)
+                imgui.Checkbox(strings.clone_to_cstring(checkbox_label), &state.textures[index].is_in_array)
                 imgui.Separator()
             }
 

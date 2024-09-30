@@ -41,6 +41,10 @@ app_state :: struct {
     quad_renderer : quad_renderer_state,
     box_cursor : box_cursor_state,
     textures : [dynamic]^texture,
+    brushes : [dynamic]^brush,
+    brush_renderer : brush_renderer_state,
+    texture_array_id : u32,
+    selected_brush : ^brush,
 }
 
 make_app_state :: proc() -> app_state{
@@ -53,6 +57,8 @@ make_app_state :: proc() -> app_state{
         box_line_renderer = make_box_line_renderer_state(),
         quad_renderer = make_quad_renderer_state(),
         box_cursor = make_box_cursor_state(),
+        brush_renderer = make_brush_renderer_state(),
+        selected_brush = nil,
     }
 }
 

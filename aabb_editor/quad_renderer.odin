@@ -10,6 +10,7 @@ quad_renderer_state :: struct {
 quad_handle :: struct {
     pos, scale, color : vec3, 
     rot : quaternion128,
+    alpha : f32,
 }
 
 make_quad_renderer_state :: proc () -> quad_renderer_state {
@@ -46,12 +47,17 @@ cleanup_quad_renderer :: proc(state : ^app_state){
 draw_quad_renderer :: proc (quad : quad_handle, state : ^app_state) {
     model : mat4 = create_model_matrix_rot(quad.pos, quad.scale, quad.rot)
     gl.UseProgram(state.shader.unlit_color_shader.id)
-    
-    gl.Uniform3f(state.shader.unlit_color_shader_color_location, quad.color.r, quad.color.g, quad.color.b)
+   
+    gl.Enable(gl.BLEND)
+    gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+
+    gl.Uniform4f(state.shader.unlit_color_shader_color_location, quad.color.r, quad.color.g, quad.color.b, quad.alpha)
     gl.UniformMatrix4fv(state.shader.unlit_color_model_location, 1, false, &model[0][0])
     gl.UniformMatrix4fv(state.shader.unlit_color_view_location, 1, false, &state.camera.view_matrix[0][0])
     gl.UniformMatrix4fv(state.shader.unlit_color_projection_location, 1, false, &state.camera.projection_matrix[0][0])
     
     gl.BindVertexArray(state.quad_renderer.vao)
     gl.DrawArrays(gl.TRIANGLES, 0, 6)
+
+    gl.Disable(gl.BLEND)
 }

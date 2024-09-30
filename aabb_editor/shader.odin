@@ -18,7 +18,9 @@ shader_type :: enum {
 
 global_shader_state :: struct {
     unlit_color_shader : ^shader,
-    unlit_color_shader_color_location, unlit_color_model_location, unlit_color_view_location, unlit_color_projection_location : i32,    
+    unlit_color_shader_color_location, unlit_color_model_location, unlit_color_view_location, unlit_color_projection_location : i32, 
+    brush_shader : ^shader,
+    brush_shader_model_location, brush_shader_view_location, brush_shader_projection_location, brush_shader_texture_array_location : i32, 
 }
 
 make_global_shader_state :: proc () -> global_shader_state {
@@ -36,11 +38,21 @@ init_global_shaders :: proc(state : ^app_state) -> bool {
     state.shader.unlit_color_view_location = OpenGL.GetUniformLocation(state.shader.unlit_color_shader.id, "view")
     state.shader.unlit_color_projection_location = OpenGL.GetUniformLocation(state.shader.unlit_color_shader.id, "projection")
 
+    brush_shader_success : bool
+    state.shader.brush_shader, brush_shader_success = load_shader_from_files("shaders/brush.vert.glsl", "shaders/brush.frag.glsl")
+    if !brush_shader_success do return false
+    
+    state.shader.brush_shader_model_location = OpenGL.GetUniformLocation(state.shader.brush_shader.id, "model")
+    state.shader.brush_shader_view_location = OpenGL.GetUniformLocation(state.shader.brush_shader.id, "view")
+    state.shader.brush_shader_projection_location = OpenGL.GetUniformLocation(state.shader.brush_shader.id, "projection")
+    state.shader.brush_shader_texture_array_location = OpenGL.GetUniformLocation(state.shader.brush_shader.id, "textureArray")
+
     return true
 }
 
 free_global_shaders :: proc(state : ^app_state) {
     free_shader(state.shader.unlit_color_shader)
+    free_shader(state.shader.brush_shader)
 }
 
 load_shader_source :: proc (file_path : string) -> (source: string, success: bool) {

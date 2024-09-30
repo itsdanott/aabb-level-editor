@@ -72,7 +72,7 @@ draw_box_line_renderer :: proc(pos, scale, color : vec3, state : ^app_state) {
     model : mat4 = create_model_matrix(pos, scale)
 
     gl.UseProgram(state.shader.unlit_color_shader.id)
-    gl.Uniform3f(state.shader.unlit_color_shader_color_location, color.r, color.g, color.b)
+    gl.Uniform4f(state.shader.unlit_color_shader_color_location, color.r, color.g, color.b, 1.0)
     gl.UniformMatrix4fv(state.shader.unlit_color_model_location, 1, false, &model[0][0])
     gl.UniformMatrix4fv(state.shader.unlit_color_view_location, 1, false, &state.camera.view_matrix[0][0])
     gl.UniformMatrix4fv(state.shader.unlit_color_projection_location, 1, false, &state.camera.projection_matrix[0][0])

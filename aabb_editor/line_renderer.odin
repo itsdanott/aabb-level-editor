@@ -77,7 +77,7 @@ draw_line_renderer :: proc (state : ^app_state) {
 
         gl.BufferData(gl.ARRAY_BUFFER, size_of(f32) * 6, &vertices, gl.STATIC_DRAW)
         
-        gl.Uniform3f(state.shader.unlit_color_shader_color_location, line.color.x, line.color.y, line.color.z)
+        gl.Uniform4f(state.shader.unlit_color_shader_color_location, line.color.x, line.color.y, line.color.z, 1.0)
         
         gl.DrawArrays(gl.LINES, 0, 2)
 
