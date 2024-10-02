@@ -251,6 +251,18 @@ draw_editor_settings_window :: proc (state : ^app_state) {
             imgui.DragFloat("BoxCursor.Max.Y", &state.box_cursor.max.y)
             imgui.DragFloat("BoxCursor.Max.Z", &state.box_cursor.max.z)
 
+            imgui.SeparatorText("Size")
+            size := aabb_get_size({state.box_cursor.min, state.box_cursor.max})
+
+            if imgui.DragFloat3("BoxCursor.Size", &size) do state.box_cursor.max = state.box_cursor.min + size
+            
+            if imgui.Button("Fix Min Max") {
+                box_cursor_aabb := aabb {state.box_cursor.min, state.box_cursor.max}
+                aabb_fix_min_max(&box_cursor_aabb)
+                state.box_cursor.min = box_cursor_aabb.min
+                state.box_cursor.max = box_cursor_aabb.max
+            }
+
             imgui.SeparatorText("Misc")
             imgui.ColorEdit3("Cursor.Color", &state.box_cursor.color)
             
