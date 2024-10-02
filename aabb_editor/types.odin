@@ -1,5 +1,6 @@
 package aabb_editor
 import "core:math/linalg"
+import "core:math"
 
 delta_time : f32 : 1.0 / 60.0
 
@@ -86,6 +87,7 @@ aabb_face_index_to_axis :: proc (face_index : i32) -> vec3 {
     case: panic("aabb face index out of range!")
     }
 }
+
 aabb_face_index_to_perpendicular_plane_normal :: proc (face_index : i32) -> vec3 {
     switch face_index {
     case AABB_FACE_INDEX_X_NEGATIVE:
@@ -103,4 +105,23 @@ aabb_face_index_to_perpendicular_plane_normal :: proc (face_index : i32) -> vec3
     case:
         panic("invalid selected_face_index")
     }
+}
+
+aabb_fix_min_max :: proc(aabb : ^aabb) {
+    aabb^ = {
+        min = vec3 {
+            math.min(aabb.min.x, aabb.max.x),
+            math.min(aabb.min.y, aabb.max.y),
+            math.min(aabb.min.z, aabb.max.z),
+        },
+        max = vec3 {
+            math.max(aabb.min.x, aabb.max.x),
+            math.max(aabb.min.y, aabb.max.y),
+            math.max(aabb.min.z, aabb.max.z),
+        }, 
+    }
+}
+
+aabb_get_size :: proc(aabb : aabb) -> vec3 {
+    return aabb.max-aabb.min
 }
