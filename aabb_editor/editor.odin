@@ -9,6 +9,8 @@ import "core:math/linalg"
 import "core:math"
 import "core:strings"
 
+USE_IMGUI_MULTIWINDOW :: #config(USE_IMGUI_MULTIWINDOW, false)
+
 editor_state :: struct {
     is_editor_visible : bool,
     is_editor_settings_window_visible : bool,
@@ -32,8 +34,9 @@ init_imgui :: proc(state : ^app_state) -> bool {
     state.editor.io.ConfigFlags += {.NavEnableKeyboard, .NavEnableGamepad}
     
     // Docking only
+    when USE_IMGUI_MULTIWINDOW do state.editor.io.ConfigFlags += { .ViewportsEnable}
+    
     state.editor.io.ConfigFlags += { .DockingEnable}
-    state.editor.io.ConfigFlags += { .ViewportsEnable}
     style := imgui.GetStyle()
     style.WindowRounding = 0
     style.Colors[imgui.Col.WindowBg].w = 1
@@ -185,18 +188,7 @@ draw_editor_main_menu :: proc (state : ^app_state) {
 draw_editor_settings_window :: proc (state : ^app_state) {
     if !state.editor.is_editor_settings_window_visible do return
     
-    // Docking-Only
     flags : imgui.WindowFlags : {.NoTitleBar}
-    // No-Docking Only
-    // flags : imgui.WindowFlags : {.NoMove, .NoResize, .NoCollapse, .NoTitleBar}
-
-    // display_size := state.editor.io.DisplaySize
-    // frame_height := imgui.GetFrameHeight()
-    // window_pos := imgui.Vec2 {display_size.x * 0.75, frame_height}
-    // window_size := imgui.Vec2 {display_size.x * 0.25, display_size.y - frame_height}
-
-    // imgui.SetNextWindowPos(window_pos)
-    // imgui.SetNextWindowSize(window_size)
     
     if imgui.Begin("Settings", nil, flags) {
         if imgui.TreeNode("Camera") {
@@ -348,9 +340,11 @@ draw_editor_ui :: proc (state : ^app_state) {
     imgui_impl_opengl3.RenderDrawData(imgui.GetDrawData())
     
     // Docking only
-    backup_current_window := glfw.GetCurrentContext()
-    imgui.UpdatePlatformWindows()
-    imgui.RenderPlatformWindowsDefault()
-    glfw.MakeContextCurrent(backup_current_window)
+    when USE_IMGUI_MULTIWINDOW {
+        backup_current_window := glfw.GetCurrentContext()
+        imgui.UpdatePlatformWindows()
+        imgui.RenderPlatformWindowsDefault()
+        glfw.MakeContextCurrent(backup_current_window)
+    }
     
 }
