@@ -106,7 +106,7 @@ glfw_process_callbacks :: proc (state : ^app_state) {
     for file_path, index in glfw_dropped_paths {
         fmt.printfln("Dropped file: %v", file_path)
         extension := filepath.ext(file_path)
-        if extension == ".png" {
+        if strings.to_lower(extension) == ".png" {
             texture, texture_success := load_texture(file_path)
             if !texture_success {
                 fmt.printfln("Failed to load texture: %v", file_path)
