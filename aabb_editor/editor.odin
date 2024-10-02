@@ -55,7 +55,8 @@ cleanup_imgui :: proc() {
     imgui_impl_glfw.Shutdown()
     imgui.DestroyContext()
 }
-@private
+
+@(private="file")
 update_mouse_pos :: proc (state : ^app_state) {
     mouse_x64, mouse_y64 := glfw.GetCursorPos(glfw_window)
     when ODIN_OS == .Darwin {

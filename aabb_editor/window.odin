@@ -24,7 +24,7 @@ window_state :: struct {
     framebuffer_size_x, framebuffer_size_y : i32,
     framebuffer_aspect : f32,
 }
-
+    
 glfw_error :: proc "c" (error : c.int, description : cstring) {
     context = runtime.default_context()
     fmt.println("glfw_error:", error, "description:", description)

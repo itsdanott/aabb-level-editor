@@ -120,12 +120,13 @@ update_box_cursor_grabbing :: proc (state : ^app_state) {
     }
 }
 
-@private get_grab_key_input :: proc () -> (esc_key_pressed, snap_key_pressed : bool){
+@(private="file")
+get_grab_key_input :: proc () -> (esc_key_pressed, snap_key_pressed : bool){
     return glfw.GetKey(glfw_window, glfw.KEY_ESCAPE) == glfw.PRESS,
     glfw.GetKey(glfw_window, glfw.KEY_LEFT_CONTROL) == glfw.PRESS
 }
 
-@private
+@(private="file")
 update_box_cursor_move_grab :: proc (state : ^app_state){ 
     esc_key_pressed, snap_key_pressed := get_grab_key_input()
     // xy_intersection, has_xy_intersection := get_xy_plane_intersection_from_mouse_pos(state, state.box_cursor.min.z, false)           
@@ -138,7 +139,7 @@ update_box_cursor_move_grab :: proc (state : ^app_state){
     }
 }
 
-@private
+@(private="file")
 update_box_cursor_face_edit :: proc (state : ^app_state){
     if !state.box_cursor.is_face_grabbing do return 
 
@@ -228,7 +229,7 @@ finish_box_cursor_face_grab :: proc (state : ^app_state) {
 }
 
 //draw ---------------------------------------------------------------------------------------------
-@private
+@(private="file")
 get_cursor_face_pos_from_face_index :: proc(face_index : i32, state : ^app_state) -> vec3 {
     switch face_index {
     case AABB_FACE_INDEX_X_NEGATIVE,
@@ -259,7 +260,7 @@ draw_box_cursor :: proc(state : ^app_state) {
     }
 }
 
-@private 
+@(private="file")
 draw_box_cursor_face_select :: proc(state : ^app_state) {
     rot : quaternion128 = get_quad_rot_from_face_index(state.box_cursor.selected_face_index)
     scale := state.box_cursor.max - state.box_cursor.min
@@ -274,7 +275,7 @@ draw_box_cursor_face_select :: proc(state : ^app_state) {
     draw_quad_renderer(quad, state)
 }
 
-@private 
+@(private="file")
 draw_box_cursor_face_grabbing :: proc(state : ^app_state) {
     if !state.box_cursor.is_face_grabbing do return    
     rot : quaternion128 = get_quad_rot_from_face_index(state.box_cursor.selected_face_index)
@@ -291,7 +292,8 @@ draw_box_cursor_face_grabbing :: proc(state : ^app_state) {
     draw_quad_renderer(quad, state)
 }
 
-@private get_quad_rot_from_face_index :: proc (face_index : i32) -> quaternion128 {
+@(private="file")
+get_quad_rot_from_face_index :: proc (face_index : i32) -> quaternion128 {
     switch face_index {
     case AABB_FACE_INDEX_X_NEGATIVE:
         return linalg.quaternion_from_forward_and_up_f32({ 0,  0, -1}, {-1,  0,  0})
