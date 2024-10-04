@@ -194,10 +194,8 @@ draw_editor_settings_window :: proc (state : ^app_state) {
     if imgui.Begin("Settings", nil, flags) {
         if imgui.TreeNode("Camera") {
 
-            imgui.SeparatorText("Position")
-            imgui.DragFloat("Camera.Pos.X", &state.camera.pos.x)
-            imgui.DragFloat("Camera.Pos.Y", &state.camera.pos.y)
-            imgui.DragFloat("Camera.Pos.Z", &state.camera.pos.z)
+            imgui.SeparatorText("Transform")
+            imgui.DragFloat3("Camera.Pos", &state.camera.pos)
 
             imgui.SeparatorText("Input")
             imgui.DragFloat("move_speed", &state.camera.move_speed)
@@ -214,15 +212,9 @@ draw_editor_settings_window :: proc (state : ^app_state) {
         }
         
         if imgui.TreeNode("Grid") {
-            imgui.SeparatorText("Position")
-            imgui.DragFloat("Grid.Pos.X", &state.grid.pos.x)
-            imgui.DragFloat("Grid.Pos.Y", &state.grid.pos.y)
-            imgui.DragFloat("Grid.Pos.Z", &state.grid.pos.z)
-
-            imgui.SeparatorText("Scale")
-            imgui.DragFloat("Grid.Scale.X", &state.grid.scale.x)
-            imgui.DragFloat("Grid.Scale.Y", &state.grid.scale.y)
-            imgui.DragFloat("Grid.Scale.Z", &state.grid.scale.z)
+            imgui.SeparatorText("Transform")
+            imgui.DragFloat3("Grid.Pos", &state.grid.pos)
+            imgui.DragFloat3("Grid.Scale", &state.grid.scale)
 
             imgui.SeparatorText("Misc")
             imgui.SliderFloat("Grid.Alpha", &state.grid.grid_alpha, 0.0, 1.0)
@@ -235,18 +227,13 @@ draw_editor_settings_window :: proc (state : ^app_state) {
         
         if imgui.TreeNode("BoxCursor") {
             imgui.SeparatorText("Min")
-            imgui.DragFloat("BoxCursor.Min.X", &state.box_cursor.min.x)
-            imgui.DragFloat("BoxCursor.Min.Y", &state.box_cursor.min.y)
-            imgui.DragFloat("BoxCursor.Min.Z", &state.box_cursor.min.z)
+            imgui.DragFloat3("BoxCursor.Max", &state.box_cursor.min)
 
             imgui.SeparatorText("Max")
-            imgui.DragFloat("BoxCursor.Max.X", &state.box_cursor.max.x)
-            imgui.DragFloat("BoxCursor.Max.Y", &state.box_cursor.max.y)
-            imgui.DragFloat("BoxCursor.Max.Z", &state.box_cursor.max.z)
+            imgui.DragFloat3("BoxCursor.Max", &state.box_cursor.max)
 
             imgui.SeparatorText("Size")
             size := aabb_get_size({state.box_cursor.min, state.box_cursor.max})
-
             if imgui.DragFloat3("BoxCursor.Size", &size) do state.box_cursor.max = state.box_cursor.min + size
             
             if imgui.Button("Fix Min Max") {
