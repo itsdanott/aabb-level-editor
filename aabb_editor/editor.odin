@@ -8,8 +8,10 @@ import "../third-party/odin-imgui/imgui_impl_opengl3"
 import "core:math/linalg"
 import "core:math"
 import "core:strings"
+import glm "core:math/linalg/glsl"
 
 USE_IMGUI_MULTIWINDOW :: #config(USE_IMGUI_MULTIWINDOW, false)
+HALF_PI : f32 : glm.PI * 0.5
 
 editor_state :: struct {
     is_editor_visible : bool,
@@ -137,21 +139,25 @@ process_editor_input :: proc (state: ^app_state) {
                 state.editor.was_alt_pressed = true
                 state.box_cursor.camera_distance = linalg.distance(camera_target, state.camera.pos)
                 look_quat := linalg.quaternion_look_at_f32(state.camera.pos, camera_target, vec3{0.0,1.0,0.0} )
-                state.box_cursor.camera_pitch = linalg.pitch_from_quaternion(look_quat)
-                state.box_cursor.camera_yaw = linalg.yaw_from_quaternion(look_quat)
-            } else if math.abs(glfw_scroll.y) > 0.01 do state.box_cursor.camera_distance = math.max(state.box_cursor.camera_distance -glfw_scroll.y, 0.5)
+                //TODO: smooth the pitch and yaw transition
+                // state.box_cursor.camera_pitch = linalg.pitch_from_quaternion(look_quat)
+                // state.box_cursor.camera_yaw = linalg.yaw_from_quaternion(look_quat)
+            } else /*if math.abs(glfw_scroll.y) > 0.001*/ do state.box_cursor.camera_distance = math.max(state.box_cursor.camera_distance -glfw_scroll.y, 0.5)
+            
+            if math.abs(state.editor.mouse_delta.x) > 0.0001 do state.box_cursor.camera_yaw += state.editor.mouse_delta.x * state.camera.orbit_sensitivity * delta_time
+            if math.abs(state.editor.mouse_delta.y) > 0.0001 do state.box_cursor.camera_pitch += state.editor.mouse_delta.y * state.camera.orbit_sensitivity * delta_time
 
-            if math.abs(state.editor.mouse_delta.x) > 0.1 do state.box_cursor.camera_yaw += state.editor.mouse_delta.x * state.camera.orbit_sensitivity * delta_time
-            if math.abs(state.editor.mouse_delta.y) > 0.1 do state.box_cursor.camera_pitch += state.editor.mouse_delta.y * state.camera.orbit_sensitivity * delta_time
-
+            state.box_cursor.camera_pitch = glm.clamp(state.box_cursor.camera_pitch, -HALF_PI + 0.001, HALF_PI - 0.001)
             pitch := state.box_cursor.camera_pitch
             yaw := state.box_cursor.camera_yaw
             
+
             orbit_x := state.box_cursor.camera_distance * math.cos_f32(pitch) * math.sin_f32(yaw)
             orbit_y := state.box_cursor.camera_distance * math.sin_f32(pitch)
             orbit_z := state.box_cursor.camera_distance * math.cos_f32(pitch) * math.cos_f32(yaw)
 
-            state.camera.pos = {orbit_x, orbit_y, orbit_z}
+            state.camera.lerp_pos = camera_target + {orbit_x, orbit_y, orbit_z}
+            state.camera.pos = linalg.lerp(state.camera.pos, state.camera.lerp_pos, state.camera.pos_lerp_speed * delta_time)
             state.camera.rot = linalg.quaternion_look_at_f32(state.camera.pos, camera_target, vec3{0.0,1.0,0.0} )
         }
     } 
@@ -199,6 +205,7 @@ draw_editor_settings_window :: proc (state : ^app_state) {
 
             imgui.SeparatorText("Input")
             imgui.DragFloat("move_speed", &state.camera.move_speed)
+            imgui.DragFloat("pos_lerp_speed", &state.camera.pos_lerp_speed)
             imgui.DragFloat("rot_key_sensitivity", &state.camera.rot_key_sensitivity)
             imgui.DragFloat("rot_mouse_sensitivity_x", &state.camera.rot_mouse_sensitivity_x)
             imgui.DragFloat("rot_mouse_sensitivity_y", &state.camera.rot_mouse_sensitivity_y)
