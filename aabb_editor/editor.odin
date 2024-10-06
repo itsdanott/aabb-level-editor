@@ -128,11 +128,13 @@ process_editor_input :: proc (state: ^app_state) {
                 yaw_quat : quaternion128 = linalg.quaternion_angle_axis_f32(math.to_radians(yaw_angle), vec3{0.0, 1.0, 0.0})
                 pitch_quat : quaternion128 = linalg.quaternion_angle_axis_f32(math.to_radians(pitch_angle), state.camera.right)
                 
-                state.camera.rot = state.camera.rot * yaw_quat
-                state.camera.rot = state.camera.rot * pitch_quat
+                state.camera.lerp_rot = state.camera.lerp_rot * yaw_quat
+                state.camera.lerp_rot = state.camera.lerp_rot * pitch_quat
                 
-                state.camera.rot = linalg.quaternion_normalize(state.camera.rot)
+                state.camera.lerp_rot = linalg.quaternion_normalize(state.camera.lerp_rot)
             }
+            state.camera.rot = linalg.lerp(state.camera.rot, state.camera.lerp_rot, state.camera.rot_lerp_speed * delta_time)
+            state.camera.rot = linalg.quaternion_normalize(state.camera.rot)
         } else {
             camera_target := linalg.lerp(state.box_cursor.min, state.box_cursor.max, 0.5)
             if !state.editor.was_alt_pressed {
@@ -159,6 +161,7 @@ process_editor_input :: proc (state: ^app_state) {
             state.camera.lerp_pos = camera_target + {orbit_x, orbit_y, orbit_z}
             state.camera.pos = linalg.lerp(state.camera.pos, state.camera.lerp_pos, state.camera.pos_lerp_speed * delta_time)
             state.camera.rot = linalg.quaternion_look_at_f32(state.camera.pos, camera_target, vec3{0.0,1.0,0.0} )
+            state.camera.lerp_rot = state.camera.rot
         }
     } 
 }
@@ -206,6 +209,7 @@ draw_editor_settings_window :: proc (state : ^app_state) {
             imgui.SeparatorText("Input")
             imgui.DragFloat("move_speed", &state.camera.move_speed)
             imgui.DragFloat("pos_lerp_speed", &state.camera.pos_lerp_speed)
+            imgui.DragFloat("rot_lerp_speed", &state.camera.rot_lerp_speed)
             imgui.DragFloat("rot_key_sensitivity", &state.camera.rot_key_sensitivity)
             imgui.DragFloat("rot_mouse_sensitivity_x", &state.camera.rot_mouse_sensitivity_x)
             imgui.DragFloat("rot_mouse_sensitivity_y", &state.camera.rot_mouse_sensitivity_y)

@@ -10,9 +10,9 @@ camera_projection :: enum {
 }
 
 camera :: struct {
-    fov, clip_near, clip_far, pos_lerp_speed : f32,
+    fov, clip_near, clip_far, pos_lerp_speed, rot_lerp_speed : f32,
     pos, forward, up, right, lerp_pos : vec3,
-    rot : quaternion128,
+    rot, lerp_rot : quaternion128,
     projection_matrix, view_matrix : mat4,
     projection : camera_projection,
     clear_color : vec3,
@@ -28,16 +28,18 @@ make_default_cam :: proc () -> camera {
         clip_near   = 0.1,
         clip_far    = 100.0,
         pos_lerp_speed = 16.0,
+        rot_lerp_speed = 16.0,
         pos = {-0.7, 2.0, 4.2},
         forward     = forward,
         right       = right,
         up          = up,
         rot         = linalg.quaternion_from_forward_and_up_f32(forward, up),
+        lerp_rot    = linalg.quaternion_from_forward_and_up_f32(forward, up),
         clear_color  = {0.25, 0.25, 0.5},
         move_speed = 4.0,
         rot_key_sensitivity = 90.0,
         rot_mouse_sensitivity_x = 120.0,
-        rot_mouse_sensitivity_y = 90.0,
+        rot_mouse_sensitivity_y = 120.0,
         orbit_sensitivity = 4.0,
     }
 }
