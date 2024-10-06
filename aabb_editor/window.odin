@@ -51,7 +51,7 @@ glfw_drop_callback :: proc "c" (window: glfw.WindowHandle, count: c.int, paths: 
     
     for i : c.int = 0; i < count; i += 1 {
         path := string(paths[i])
-        append(&glfw_dropped_paths, path)
+        append(&glfw_dropped_paths, strings.clone(path))
     }
 }
 
