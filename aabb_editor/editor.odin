@@ -227,7 +227,7 @@ draw_editor_settings_window :: proc (state : ^app_state) {
         
         if imgui.TreeNode("BoxCursor") {
             imgui.SeparatorText("Min")
-            imgui.DragFloat3("BoxCursor.Max", &state.box_cursor.min)
+            imgui.DragFloat3("BoxCursor.Min", &state.box_cursor.min)
 
             imgui.SeparatorText("Max")
             imgui.DragFloat3("BoxCursor.Max", &state.box_cursor.max)
