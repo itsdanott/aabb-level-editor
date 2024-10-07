@@ -91,7 +91,10 @@ init_glfw_window :: proc(width, height : u16, title : string) -> bool {
     glfw.SwapInterval(1)
     
     OpenGL.load_up_to(int(GL_VERSION_MAJOR), int(GL_VERSION_MINOR), glfw.gl_set_proc_address)
-    glfw_framebuffer_size_callback(glfw_window, c.int(width), c.int(height))
+    
+    
+    framebuffer_size_x, framebuffer_size_y = glfw.GetFramebufferSize(glfw_window)
+    glfw_framebuffer_size_callback(glfw_window, framebuffer_size_x, framebuffer_size_y)
 
     glfw.SetFramebufferSizeCallback(glfw_window, glfw_framebuffer_size_callback)
     glfw.SetScrollCallback(glfw_window, glfw_scroll_callback)
