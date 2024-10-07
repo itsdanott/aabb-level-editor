@@ -121,7 +121,7 @@ process_editor_input :: proc (state: ^app_state) {
  
     if mouse_button_right_press {
         if !alt_pressed {
-            if linalg.vector_length(state.editor.mouse_delta) > 0.0001 {
+            if linalg.vector_length(state.editor.mouse_delta) > math.F32_EPSILON {
                 pitch_angle : f32 = -state.editor.mouse_delta.y * state.camera.rot_mouse_sensitivity_y * delta_time
                 yaw_angle : f32 = -state.editor.mouse_delta.x * state.camera.rot_mouse_sensitivity_x * delta_time
                 
@@ -144,12 +144,12 @@ process_editor_input :: proc (state: ^app_state) {
                 //TODO: smooth the pitch and yaw transition
                 // state.box_cursor.camera_pitch = linalg.pitch_from_quaternion(look_quat)
                 // state.box_cursor.camera_yaw = linalg.yaw_from_quaternion(look_quat)
-            } else /*if math.abs(glfw_scroll.y) > 0.001*/ do state.box_cursor.camera_distance = math.max(state.box_cursor.camera_distance -glfw_scroll.y, 0.5)
+            } else /*if math.abs(glfw_scroll.y) > math.F32_EPSILON*/ do state.box_cursor.camera_distance = math.max(state.box_cursor.camera_distance -glfw_scroll.y, 0.5)
             
-            if math.abs(state.editor.mouse_delta.x) > 0.0001 do state.box_cursor.camera_yaw += state.editor.mouse_delta.x * state.camera.orbit_sensitivity * delta_time
-            if math.abs(state.editor.mouse_delta.y) > 0.0001 do state.box_cursor.camera_pitch += state.editor.mouse_delta.y * state.camera.orbit_sensitivity * delta_time
+            if math.abs(state.editor.mouse_delta.x) > math.F32_EPSILON do state.box_cursor.camera_yaw += state.editor.mouse_delta.x * state.camera.orbit_sensitivity * delta_time
+            if math.abs(state.editor.mouse_delta.y) > math.F32_EPSILON do state.box_cursor.camera_pitch += state.editor.mouse_delta.y * state.camera.orbit_sensitivity * delta_time
 
-            state.box_cursor.camera_pitch = glm.clamp(state.box_cursor.camera_pitch, -HALF_PI + 0.001, HALF_PI - 0.001)
+            state.box_cursor.camera_pitch = glm.clamp(state.box_cursor.camera_pitch, -HALF_PI + math.F32_EPSILON, HALF_PI - math.F32_EPSILON)
             pitch := state.box_cursor.camera_pitch
             yaw := state.box_cursor.camera_yaw
             
