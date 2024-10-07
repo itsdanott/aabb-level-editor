@@ -6,12 +6,10 @@ import imgui "../third-party/odin-imgui"
 import "../third-party/odin-imgui/imgui_impl_glfw"
 import "../third-party/odin-imgui/imgui_impl_opengl3"
 import "core:math/linalg"
-import "core:math"
 import "core:strings"
-import glm "core:math/linalg/glsl"
 
 USE_IMGUI_MULTIWINDOW :: #config(USE_IMGUI_MULTIWINDOW, false)
-HALF_PI : f32 : glm.PI * 0.5
+HALF_PI : f32 : linalg.PI * 0.5
 
 editor_state :: struct {
     is_editor_visible : bool,
@@ -111,8 +109,8 @@ process_editor_input :: proc (state: ^app_state) {
     if glfw.GetKey(glfw_window, glfw.KEY_E) == glfw.PRESS do cam_velocity += cam_up
     
     //keyboard rotation
-    if glfw.GetKey(glfw_window, glfw.KEY_RIGHT) == glfw.PRESS do state.camera.rot = state.camera.rot * linalg.quaternion_angle_axis_f32(math.to_radians(state.camera.rot_key_sensitivity * delta_time), {0,1,0})
-    if glfw.GetKey(glfw_window, glfw.KEY_LEFT) == glfw.PRESS do state.camera.rot = state.camera.rot * linalg.quaternion_angle_axis_f32(math.to_radians(-state.camera.rot_key_sensitivity * delta_time), {0,1,0})
+    if glfw.GetKey(glfw_window, glfw.KEY_RIGHT) == glfw.PRESS do state.camera.rot = state.camera.rot * linalg.quaternion_angle_axis_f32(linalg.to_radians(state.camera.rot_key_sensitivity * delta_time), {0,1,0})
+    if glfw.GetKey(glfw_window, glfw.KEY_LEFT) == glfw.PRESS do state.camera.rot = state.camera.rot * linalg.quaternion_angle_axis_f32(linalg.to_radians(-state.camera.rot_key_sensitivity * delta_time), {0,1,0})
 
     if(linalg.vector_length(cam_velocity) > 0.2){
         cam_velocity = linalg.vector_normalize(cam_velocity)
@@ -121,20 +119,24 @@ process_editor_input :: proc (state: ^app_state) {
  
     if mouse_button_right_press {
         if !alt_pressed {
-            if linalg.vector_length(state.editor.mouse_delta) > math.F32_EPSILON {
+            if linalg.vector_length(state.editor.mouse_delta) > linalg.F32_EPSILON {
                 pitch_angle : f32 = -state.editor.mouse_delta.y * state.camera.rot_mouse_sensitivity_y * delta_time
                 yaw_angle : f32 = -state.editor.mouse_delta.x * state.camera.rot_mouse_sensitivity_x * delta_time
                 
-                yaw_quat : quaternion128 = linalg.quaternion_angle_axis_f32(math.to_radians(yaw_angle), vec3{0.0, 1.0, 0.0})
-                pitch_quat : quaternion128 = linalg.quaternion_angle_axis_f32(math.to_radians(pitch_angle), state.camera.right)
+                yaw_quat : quaternion128 = linalg.quaternion_angle_axis_f32(linalg.to_radians(yaw_angle), vec3{0.0, 1.0, 0.0})
+                pitch_quat : quaternion128 = linalg.quaternion_angle_axis_f32(linalg.to_radians(pitch_angle), state.camera.right)
                 
                 state.camera.lerp_rot = state.camera.lerp_rot * yaw_quat
                 state.camera.lerp_rot = state.camera.lerp_rot * pitch_quat
                 
                 state.camera.lerp_rot = linalg.quaternion_normalize(state.camera.lerp_rot)
+
             }
-            state.camera.rot = linalg.lerp(state.camera.rot, state.camera.lerp_rot, state.camera.rot_lerp_speed * delta_time)
-            state.camera.rot = linalg.quaternion_normalize(state.camera.rot)
+            //TODO: fix roll rotation appearing when rot lerping
+            // state.camera.rot = linalg.lerp(state.camera.rot, state.camera.lerp_rot, state.camera.rot_lerp_speed * delta_time)
+            // state.camera.rot = linalg.quaternion_normalize(state.camera.rot)
+            //this is the temporary hard setting of the value:
+            state.camera.rot = state.camera.lerp_rot
         } else {
             camera_target := linalg.lerp(state.box_cursor.min, state.box_cursor.max, 0.5)
             if !state.editor.was_alt_pressed {
@@ -144,19 +146,19 @@ process_editor_input :: proc (state: ^app_state) {
                 //TODO: smooth the pitch and yaw transition
                 // state.box_cursor.camera_pitch = linalg.pitch_from_quaternion(look_quat)
                 // state.box_cursor.camera_yaw = linalg.yaw_from_quaternion(look_quat)
-            } else /*if math.abs(glfw_scroll.y) > math.F32_EPSILON*/ do state.box_cursor.camera_distance = math.max(state.box_cursor.camera_distance -glfw_scroll.y, 0.5)
+            } else /*if linalg.abs(glfw_scroll.y) > linalg.F32_EPSILON*/ do state.box_cursor.camera_distance = linalg.max(state.box_cursor.camera_distance -glfw_scroll.y, 0.5)
             
-            if math.abs(state.editor.mouse_delta.x) > math.F32_EPSILON do state.box_cursor.camera_yaw += state.editor.mouse_delta.x * state.camera.orbit_sensitivity * delta_time
-            if math.abs(state.editor.mouse_delta.y) > math.F32_EPSILON do state.box_cursor.camera_pitch += state.editor.mouse_delta.y * state.camera.orbit_sensitivity * delta_time
+            if linalg.abs(state.editor.mouse_delta.x) > linalg.F32_EPSILON do state.box_cursor.camera_yaw += state.editor.mouse_delta.x * state.camera.orbit_sensitivity * delta_time
+            if linalg.abs(state.editor.mouse_delta.y) > linalg.F32_EPSILON do state.box_cursor.camera_pitch += state.editor.mouse_delta.y * state.camera.orbit_sensitivity * delta_time
 
-            state.box_cursor.camera_pitch = glm.clamp(state.box_cursor.camera_pitch, -HALF_PI + math.F32_EPSILON, HALF_PI - math.F32_EPSILON)
+            state.box_cursor.camera_pitch = linalg.clamp(state.box_cursor.camera_pitch, -HALF_PI + linalg.F32_EPSILON, HALF_PI - linalg.F32_EPSILON)
             pitch := state.box_cursor.camera_pitch
             yaw := state.box_cursor.camera_yaw
             
 
-            orbit_x := state.box_cursor.camera_distance * math.cos_f32(pitch) * math.sin_f32(yaw)
-            orbit_y := state.box_cursor.camera_distance * math.sin_f32(pitch)
-            orbit_z := state.box_cursor.camera_distance * math.cos_f32(pitch) * math.cos_f32(yaw)
+            orbit_x := state.box_cursor.camera_distance * linalg.cos(pitch) * linalg.sin(yaw)
+            orbit_y := state.box_cursor.camera_distance * linalg.sin(pitch)
+            orbit_z := state.box_cursor.camera_distance * linalg.cos(pitch) * linalg.cos(yaw)
 
             state.camera.lerp_pos = camera_target + {orbit_x, orbit_y, orbit_z}
             state.camera.pos = linalg.lerp(state.camera.pos, state.camera.lerp_pos, state.camera.pos_lerp_speed * delta_time)
