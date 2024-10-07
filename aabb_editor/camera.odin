@@ -23,18 +23,21 @@ make_default_cam :: proc () -> camera {
     forward := vec3{0.0, 0.0, -1.0}
     up :=  vec3 {0.0, 1.0, 0.0}
     right := vec3 {1.0, 0.0, 0.0}
+    pos := vec3 {-0.7, 2.0, 4.2}
+    rot := linalg.quaternion_from_forward_and_up_f32(forward, up)
     return {
         fov         = 60.0,
         clip_near   = 0.1,
         clip_far    = 100.0,
         pos_lerp_speed = 16.0,
         rot_lerp_speed = 16.0,
-        pos = {-0.7, 2.0, 4.2},
+        pos = pos,
+        lerp_pos = pos,
         forward     = forward,
         right       = right,
         up          = up,
-        rot         = linalg.quaternion_from_forward_and_up_f32(forward, up),
-        lerp_rot    = linalg.quaternion_from_forward_and_up_f32(forward, up),
+        rot         = rot,
+        lerp_rot    = rot,
         clear_color  = {0.25, 0.25, 0.5},
         move_speed = 4.0,
         rot_key_sensitivity = 90.0,
