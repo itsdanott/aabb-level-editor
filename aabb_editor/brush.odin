@@ -80,11 +80,11 @@ create_brush_from_box_cursor :: proc (state : ^app_state) {
             {{1, 1}, AABB_VERTPOS_INDEX_LEFT_TOP_FRONT, 0},
             {{0, 1}, AABB_VERTPOS_INDEX_LEFT_TOP_BACK, 0},
 
-            //Triangle-Right-1
+            //AABB_FACE_INDEX_X_POSITIVE: Triangle-Right-1
             {{0, 0}, AABB_VERTPOS_INDEX_RIGHT_BOTTOM_FRONT, 0},
             {{1, 0}, AABB_VERTPOS_INDEX_RIGHT_BOTTOM_BACK, 0},
             {{1, 1}, AABB_VERTPOS_INDEX_RIGHT_TOP_BACK, 0},
-            //Triangle-Right-2
+            //AABB_FACE_INDEX_X_POSITIVE: Triangle-Right-2
             {{0, 0}, AABB_VERTPOS_INDEX_RIGHT_BOTTOM_FRONT, 0},
             {{1, 1}, AABB_VERTPOS_INDEX_RIGHT_TOP_BACK, 0},
             {{0, 1}, AABB_VERTPOS_INDEX_RIGHT_TOP_FRONT, 0},
@@ -137,7 +137,6 @@ cleanup_brushes :: proc (state : ^app_state){
 }
 
 draw_brushes :: proc(state : ^app_state){
-    
     gl.FrontFace(gl.CCW)
     gl.Enable(gl.CULL_FACE)
     gl.Enable(gl.DEPTH_TEST)
