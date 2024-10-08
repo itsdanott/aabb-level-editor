@@ -1,26 +1,31 @@
-# ToDo 
-## Box Face Grab
-* Implement face grabbing for the 3 axes. This can be useful for:
-    * Scaling
-    * Translating
-    * Face Selecting (edit Texture + TexCoords)
+# AABB Level Editor
+> A simple level editor for axis aligned bounding boxes made in a few days during Wheel Reinvention Jam 2024. 
 
-## Box Cursor 
-* The box cursor can be used for these editing actions:
-    * translate the grid (height)
-    * place a new aabb brush
-    * place a new mesh
-    * rotate the camera around the cursor
+This is the state after the jam - a raw skeleton of the editor with simple brute force rendering and almost no features besides creating aaabb brushes and assigning textures.
 
+## Run 
+After cloning make sure to init the odin-imgui submodule via:
 
+```shell 
+git submodule init  
+git submodule update
+```
 
-# Steps
-## Adding a Line Renderer
-## Adding plane struct and plane raycast  to determine box cursor face grabbing 
-## After experimenting with plane -> simplification: simply use the XZ plane (with variable height)
-## change from position to min max vectors for the box, as it has some benefits for calculation:
-With the BoxPosition and Scale vector approach I managed to place the edit quad face to the corresponding position. 
-But when working on the drag feature I noticed that the offset in rotation and position due to the BoxPosition vector approach 
-also makes the exact preview position during harder to calculate as I would need to remove the offset while dragging.
+Then follow the build instructions in the [Odin ImGui Readme](https://gitlab.com/L-4/odin-imgui/-/blob/main/README.md) in order to build the odin-imgui dependencies for your platform.
 
-Working with min max instead seems to be the easier solution!
+The project was tested on windows and macos(apple silicon) but should run on linux as well.
+
+## Wheel Reinvention Jam 2024
+The goal for the Wheel Reinvention Jam 2024 was to get started with learning the odin programming language. Ideally only the odin vendor libraries will be used (except for e.g. imgui).
+
+### Main Goals:
+* Create AABB brushes 
+* Edit translation and scale of the brushes
+*Assign textures and texcoords to each face
+* Unlit forward renderer with occlusion culling utilizing the AABBs
+
+### Stretch Goals:
+* Deform AABBs via planes (similar to boolean operation)
+* Load GLTF meshes via cgltf and make them placeable in the editor
+* place point lights in the editor
+* Shadow mapping
