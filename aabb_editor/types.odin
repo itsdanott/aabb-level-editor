@@ -46,7 +46,7 @@ app_state :: struct {
     brush_renderer : brush_renderer_state,
     texture_array_id : u32,
     selected_brush : ^brush,
-    is_mouse_hit : bool, //TODO: to be used to get the edge points 
+    is_mouse_hit : bool, //TODO: to be used to get the aabb edge points
 }
 
 make_app_state :: proc() -> app_state{
@@ -78,13 +78,13 @@ create_model_matrix_rot :: proc (pos : vec3, scale : vec3, rot : quaternion128) 
 }
 
 aabb_face_index_to_axis :: proc (face_index : i32) -> vec3 {
-    switch face_index {   
+    switch face_index {
     case 0..<2: //X
-        return {1.0, 0.0, 0.0} 
+        return {1.0, 0.0, 0.0}
     case 2..<4: //Y
         return {0.0, 1.0, 0.0}
     case 4..<6: //Z
-        return {0.0, 0.0, 1.0}                       
+        return {0.0, 0.0, 1.0}
     case: panic("aabb face index out of range!")
     }
 }
@@ -119,7 +119,7 @@ aabb_fix_min_max :: proc(aabb : ^aabb) {
             math.max(aabb.min.x, aabb.max.x),
             math.max(aabb.min.y, aabb.max.y),
             math.max(aabb.min.z, aabb.max.z),
-        }, 
+        },
     }
 }
 

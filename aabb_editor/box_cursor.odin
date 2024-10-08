@@ -43,10 +43,10 @@ start_box_cursor_mouse_click :: proc (state : ^app_state) {
     is_hit : bool
     switch state.box_cursor.mouse_mode{
     case .MOVE, .FACE_SELECT, .FACE_EDIT:
-        aabb := aabb { 
+        aabb := aabb {
             min = state.box_cursor.min,
             max = state.box_cursor.max,
-        }                
+        }
         result, is_hit = ray_aabb_intersection(ray, aabb)
         if is_hit do state.box_cursor.selected_face_index = result.hit_face_index
     case .BRUSH_SELECT:
@@ -54,7 +54,7 @@ start_box_cursor_mouse_click :: proc (state : ^app_state) {
             aabb := aabb { 
                 min = brush.min,
                 max = brush.max,
-            }                
+            }
             result, is_hit = ray_aabb_intersection(ray, aabb)
             if is_hit {
                 select_brush(brush, state)
@@ -98,7 +98,6 @@ start_box_cursor_face_grabbing :: proc (ray : ray, raycast_result : ray_aabb_int
     state.box_cursor.face_grab_axis = axis
     scale := state.box_cursor.max - state.box_cursor.min
     state.box_cursor.face_pos = get_cursor_face_pos_from_face_index(state.box_cursor.selected_face_index, state)
-    
     // fmt.println("Index:", raycast_result.hit_face_index)
 
     // add_line_render_handle({
@@ -151,7 +150,7 @@ update_box_cursor_face_edit :: proc (state : ^app_state){
     if esc_key_pressed {
         state.box_cursor.is_face_grabbing = false
         return
-    }            
+    }
     
     switch state.box_cursor.selected_face_index {
     case 0..<2: //X
@@ -164,7 +163,7 @@ update_box_cursor_face_edit :: proc (state : ^app_state){
         zy_point, has_zy_intersection := get_zy_plane_intersection_from_mouse_pos(state, state.box_cursor.min.x, false)           
         if has_zy_intersection do state.box_cursor.face_pos.z = snap_key_pressed ? math.floor(zy_point.z) : zy_point.z
     case: panic("aabb face index out of range!")
-    }    
+    }
 }
 
 //finish grab-----------------------------------------------------------------------------------------------------------
@@ -190,7 +189,7 @@ finish_box_cursor_face_grab :: proc (state : ^app_state) {
 
     cursor := state.box_cursor.face_pos
     min := state.box_cursor.min
-    max := state.box_cursor.max            
+    max := state.box_cursor.max
 
     switch state.box_cursor.selected_face_index {
     case AABB_FACE_INDEX_X_NEGATIVE:
@@ -277,7 +276,7 @@ draw_box_cursor_face_select :: proc(state : ^app_state) {
         color = state.box_cursor.face_grab_axis,
         scale = scale,
         rot = rot,
-        alpha = 0.5,  
+        alpha = 0.5,
     }
     draw_quad_renderer(quad, state)
 }
@@ -293,8 +292,8 @@ draw_box_cursor_face_grabbing :: proc(state : ^app_state) {
         pos = state.box_cursor.face_pos,
         color = state.box_cursor.face_grab_axis,
         scale = scale,
-        rot = rot,    
-        alpha = 0.75,        
+        rot = rot,
+        alpha = 0.75,
     }
     draw_quad_renderer(quad, state)
 }

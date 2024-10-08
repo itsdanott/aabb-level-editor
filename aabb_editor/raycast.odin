@@ -109,7 +109,7 @@ bool = false) -> (intersection : vec3, has_intersection:bool) {
     ray := get_ray_from_mouse_pos(state)    
 
     if ray.direction.y == 0.0 do return {}, false //ray is parallel to the plane
-    t := (plane_y-ray.origin.y) / ray.direction.y    
+    t := (plane_y-ray.origin.y) / ray.direction.y
     
     if positive_traversal_only && t < 0.0 do return {}, false //ray intersection is in negtaive direction
 
@@ -136,7 +136,7 @@ bool = false) -> (intersection : vec3, has_intersection:bool) {
 
 get_zy_plane_intersection_from_mouse_pos :: proc (state : ^app_state,  plane_x : f32 = 0.0, positive_traversal_only : 
 bool = false) -> (intersection : vec3, has_intersection:bool) {
-    ray := get_ray_from_mouse_pos(state)    
+    ray := get_ray_from_mouse_pos(state)
 
     if ray.direction.x == 0.0 do return {}, false //ray is parallel to the plane
     t := (plane_x-ray.origin.x) / ray.direction.x
