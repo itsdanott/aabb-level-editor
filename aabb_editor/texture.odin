@@ -87,26 +87,29 @@ generate_texture_array :: proc(state : ^app_state) {
         texture.array_index = -1
         if texture.is_in_array {
             if reference_texture == nil do reference_texture = texture
-            else if texture.width != reference_texture.width || texture.height != reference_texture.height || texture.channels != reference_texture.channels {
-                fmt.printfln("texture[%v] marked for array, but does not match reference texture (width, height, channels)", texture.id)
+            else if texture.width != reference_texture.width || texture.height != reference_texture.height || 
+            texture.channels != reference_texture.channels {
+                fmt.printfln("texture[%v] marked for array, but does not match reference texture (width, height, channels)", 
+                    texture.id)
                 continue
             }
             append(&array_textures, texture)
         }
     }
 
-
     gl.GenTextures(1, &state.texture_array_id)
     gl.BindTexture(gl.TEXTURE_2D_ARRAY, state.texture_array_id)
     format := get_texture_format_from_channels(reference_texture.channels)
     num_textures := len(array_textures)
-    gl.TexImage3D(gl.TEXTURE_2D_ARRAY, 0, format, reference_texture.width, reference_texture.height, i32(num_textures), 0, u32(format), gl.UNSIGNED_BYTE, nil)
+    gl.TexImage3D(gl.TEXTURE_2D_ARRAY, 0, format, reference_texture.width, reference_texture.height, i32(num_textures),
+        0, u32(format), gl.UNSIGNED_BYTE, nil)
 
 
 
     for texture, index in array_textures {
         gl.BindTexture(gl.TEXTURE_2D, texture.id)
-        gl.TexSubImage3D(gl.TEXTURE_2D_ARRAY, 0,0,0, i32(index), reference_texture.width, reference_texture.height, 1, u32(format),gl.UNSIGNED_BYTE, texture.raw_data)
+        gl.TexSubImage3D(gl.TEXTURE_2D_ARRAY, 0,0,0, i32(index), reference_texture.width, reference_texture.height, 1,
+            u32(format),gl.UNSIGNED_BYTE, texture.raw_data)
         texture.array_index = i32(index)
     }
     

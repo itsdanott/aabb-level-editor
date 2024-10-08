@@ -48,7 +48,6 @@ make_default_cam :: proc () -> camera {
 }
 
 update_camera_matrices :: proc (cam : ^camera ) {
-
     rotation_matrix := linalg.matrix4_from_quaternion_f32(cam.rot)
     translation_matrix := linalg.matrix4_translate_f32(-cam.pos)
     view_matrix := rotation_matrix * translation_matrix
@@ -58,6 +57,7 @@ update_camera_matrices :: proc (cam : ^camera ) {
     cam.right = linalg.vector_normalize(vec3{view_matrix[0][0], view_matrix[1][0], view_matrix[2][0]})
     cam.up = linalg.vector_normalize(vec3{view_matrix[0][1], view_matrix[1][1], view_matrix[2][1]})
 
-    cam.projection_matrix = linalg.matrix4_perspective(math.to_radians(cam.fov), framebuffer_aspect, cam.clip_near, cam.clip_far)
+    cam.projection_matrix = linalg.matrix4_perspective(math.to_radians(cam.fov), framebuffer_aspect, cam.clip_near, 
+        cam.clip_far)
     cam.view_matrix = view_matrix
 }

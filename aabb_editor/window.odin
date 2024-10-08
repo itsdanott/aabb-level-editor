@@ -24,12 +24,14 @@ window_state :: struct {
     framebuffer_size_x, framebuffer_size_y : i32,
     framebuffer_aspect : f32,
 }
-    
+
+@(private="file")
 glfw_error :: proc "c" (error : c.int, description : cstring) {
     context = runtime.default_context()
     fmt.println("glfw_error:", error, "description:", description)
 }
 
+@(private="file")
 glfw_framebuffer_size_callback :: proc "c" (window: glfw.WindowHandle, width, height : i32) {
     framebuffer_size_x = width
     framebuffer_size_y = height
@@ -41,11 +43,13 @@ glfw_framebuffer_size_callback :: proc "c" (window: glfw.WindowHandle, width, he
     OpenGL.Viewport(0,0, width, height)
 }
 
+@(private="file")
 glfw_scroll_callback :: proc "c" (window : glfw.WindowHandle, xOffset, yOffset : f64){
     glfw_scroll.x = f32(xOffset)
     glfw_scroll.y = f32(yOffset)
 }
 
+@(private="file")
 glfw_drop_callback :: proc "c" (window: glfw.WindowHandle, count: c.int, paths: [^]cstring) {
     context = runtime.default_context()
     
@@ -55,6 +59,7 @@ glfw_drop_callback :: proc "c" (window: glfw.WindowHandle, count: c.int, paths: 
     }
 }
 
+@(private="file")
 init_glfw_window_hints :: proc() {
     glfw.WindowHint(glfw.RESIZABLE, 1)
     glfw.WindowHint(glfw.CONTEXT_VERSION_MAJOR, GL_VERSION_MAJOR)

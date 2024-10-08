@@ -72,7 +72,8 @@ cleanup_grid :: proc(state : ^app_state) {
 }
 
 draw_grid :: proc(state : ^app_state) {
-    state.grid.pos = vec3{state.camera.pos.x - state.grid.scale.x * 0.5, math.floor(state.box_cursor.min.y), state.camera.pos.z - state.grid.scale.z * 0.5}
+    state.grid.pos = vec3{state.camera.pos.x - state.grid.scale.x * 0.5, math.floor(state.box_cursor.min.y), 
+        state.camera.pos.z - state.grid.scale.z * 0.5}
     model : mat4 = create_model_matrix(state.grid.pos, state.grid.scale)
     
     gl.Enable(gl.BLEND)
@@ -82,8 +83,10 @@ draw_grid :: proc(state : ^app_state) {
     gl.UniformMatrix4fv(state.grid.shader_view_location, 1, false, &state.camera.view_matrix[0][0])
     gl.UniformMatrix4fv(state.grid.shader_projection_location, 1, false, &state.camera.projection_matrix[0][0])
     gl.Uniform3f(state.grid.shader_view_pos_location, state.camera.pos.x, state.camera.pos.y, state.camera.pos.z)
-    gl.Uniform3f(state.grid.shader_checker_col1_location, state.grid.checker_col1.r,state.grid.checker_col1.g, state.grid.checker_col1.b)
-    gl.Uniform3f(state.grid.shader_checker_col2_location, state.grid.checker_col2.r,state.grid.checker_col2.g, state.grid.checker_col2.b)
+    gl.Uniform3f(state.grid.shader_checker_col1_location, state.grid.checker_col1.r,state.grid.checker_col1.g, 
+        state.grid.checker_col1.b)
+    gl.Uniform3f(state.grid.shader_checker_col2_location, state.grid.checker_col2.r,state.grid.checker_col2.g,
+         state.grid.checker_col2.b)
     gl.Uniform1f(state.grid.shader_grid_alpha_location, state.grid.grid_alpha)
     gl.Uniform1f(state.grid.shader_grid_fade_dist_location, state.grid.grid_fade_dist)
     gl.BindVertexArray(state.grid.vao)
