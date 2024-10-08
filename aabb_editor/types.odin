@@ -9,16 +9,6 @@ vec3 :: [3]f32
 vec4 :: [4]f32
 mat4 :: matrix[4,4]f32
 
-max_brushes_per_level :: 1024
-
-level_data :: struct {
-    brushes : [max_brushes_per_level]aabb_brush,
-}
-
-aabb_brush :: struct { 
-    position : vec3,
-}
-
 aabb :: struct {
     min, max : vec3,
 }
