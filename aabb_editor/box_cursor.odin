@@ -26,6 +26,7 @@ box_cursor_state :: struct {
     camera_distance, camera_pitch, camera_yaw : f32,
 }
 
+@(private)
 make_box_cursor_state :: proc() -> box_cursor_state {
     return {
         min = {0,0,0},
@@ -35,7 +36,7 @@ make_box_cursor_state :: proc() -> box_cursor_state {
 }
 
 //start grab ----------------------------------------------------------------------------------------------------------
-
+@(private)
 start_box_cursor_mouse_click :: proc (state : ^app_state) {
     ray := get_ray_from_mouse_pos(state)
     result : ray_aabb_intersection_result 
@@ -81,14 +82,17 @@ start_box_cursor_mouse_click :: proc (state : ^app_state) {
     }
 }
 
+@(private="file")
 start_box_cursor_move :: proc (face_index : i32, state : ^app_state) {
-
+    panic("start_box_cursor_move not implemented!")
 }
 
+@(private="file")
 start_box_cursor_face_select :: proc (face_index : i32, state : ^app_state) {
     state.box_cursor.face_grab_axis = aabb_face_index_to_axis(face_index)
 }
 
+@(private="file")
 start_box_cursor_face_grabbing :: proc (ray : ray, raycast_result : ray_aabb_intersection_result, state : ^app_state) {
     state.box_cursor.is_face_grabbing = true
     axis := aabb_face_index_to_axis(raycast_result.hit_face_index)
@@ -106,7 +110,8 @@ start_box_cursor_face_grabbing :: proc (ray : ray, raycast_result : ray_aabb_int
     // }, state)
 }
 
-//update grab---------------------------------------------------------------------------------------------------------------
+//update grab-----------------------------------------------------------------------------------------------------------
+@(private)
 update_box_cursor_grabbing :: proc (state : ^app_state) {
     switch state.box_cursor.mouse_mode{
     case .MOVE:
@@ -128,13 +133,13 @@ get_grab_key_input :: proc () -> (esc_key_pressed, snap_key_pressed : bool){
 
 @(private="file")
 update_box_cursor_move_grab :: proc (state : ^app_state){ 
-    esc_key_pressed, snap_key_pressed := get_grab_key_input()
-    // xy_intersection, has_xy_intersection := get_xy_plane_intersection_from_mouse_pos(state, state.box_cursor.min.z, false)           
+    esc_key_pressed, snap_key_pressed := get_grab_key_input()    
     xz_intersection, has_xz_intersection := get_xz_plane_intersection_from_mouse_pos(state, state.box_cursor.min.y, false)           
     
     if has_xz_intersection {
         scale := state.box_cursor.max - state.box_cursor.min
-        state.box_cursor.min = snap_key_pressed ? vec3{math.floor(xz_intersection.x), math.floor(xz_intersection.y), math.floor(xz_intersection.z)} : xz_intersection
+        state.box_cursor.min = snap_key_pressed ? vec3{math.floor(xz_intersection.x), math.floor(xz_intersection.y), 
+            math.floor(xz_intersection.z)} : xz_intersection
         state.box_cursor.max = state.box_cursor.min + scale
     }
 }
@@ -146,23 +151,25 @@ update_box_cursor_face_edit :: proc (state : ^app_state){
     esc_key_pressed, snap_key_pressed := get_grab_key_input()
     if esc_key_pressed {
         state.box_cursor.is_face_grabbing = false
-    } else {           
-        switch state.box_cursor.selected_face_index {
-        case 0..<2: //X
-            xy_intersection, has_xy_intersection := get_xy_plane_intersection_from_mouse_pos(state, state.box_cursor.min.z, false)           
-            if has_xy_intersection do state.box_cursor.face_pos.x = snap_key_pressed ? math.floor(xy_intersection.x) : xy_intersection.x
-        case 2..<4: //Y
-            xy_intersection, has_xy_intersection := get_xy_plane_intersection_from_mouse_pos(state, state.box_cursor.min.z, false)           
-            if has_xy_intersection do state.box_cursor.face_pos.y = snap_key_pressed ? math.floor(xy_intersection.y) : xy_intersection.y
-        case 4..<6: //Z
-            zy_intersection, has_zy_intersection := get_zy_plane_intersection_from_mouse_pos(state, state.box_cursor.min.x, false)           
-            if has_zy_intersection do state.box_cursor.face_pos.z = snap_key_pressed ? math.floor(zy_intersection.z) : zy_intersection.z
-        case: panic("aabb face index out of range!")
-        }
-    }
+        return
+    }            
+    
+    switch state.box_cursor.selected_face_index {
+    case 0..<2: //X
+        xy_point, has_xy_intersection := get_xy_plane_intersection_from_mouse_pos(state, state.box_cursor.min.z, false)           
+        if has_xy_intersection do state.box_cursor.face_pos.x = snap_key_pressed ? math.floor(xy_point.x) : xy_point.x
+    case 2..<4: //Y
+        xy_point, has_xy_intersection := get_xy_plane_intersection_from_mouse_pos(state, state.box_cursor.min.z, false)           
+        if has_xy_intersection do state.box_cursor.face_pos.y = snap_key_pressed ? math.floor(xy_point.y) : xy_point.y
+    case 4..<6: //Z
+        zy_point, has_zy_intersection := get_zy_plane_intersection_from_mouse_pos(state, state.box_cursor.min.x, false)           
+        if has_zy_intersection do state.box_cursor.face_pos.z = snap_key_pressed ? math.floor(zy_point.z) : zy_point.z
+    case: panic("aabb face index out of range!")
+    }    
 }
 
-//finish grab-------------------------------------------------------------------------------------------------------------
+//finish grab-----------------------------------------------------------------------------------------------------------
+@(private)
 finish_box_cursor_grabbing :: proc(state : ^app_state) {
     switch state.box_cursor.mouse_mode {
     case .MOVE:
@@ -176,6 +183,7 @@ finish_box_cursor_grabbing :: proc(state : ^app_state) {
     }
 }
 
+@(private="file")
 finish_box_cursor_face_grab :: proc (state : ^app_state) {
     if !state.box_cursor.is_face_grabbing do return 
 
@@ -228,7 +236,22 @@ finish_box_cursor_face_grab :: proc (state : ^app_state) {
     }
 }
 
-//draw ---------------------------------------------------------------------------------------------
+//draw -----------------------------------------------------------------------------------------------------------------
+draw_box_cursor :: proc(state : ^app_state) {
+    draw_box_line_renderer_aabb(state.box_cursor.min, state.box_cursor.max, state.box_cursor.color, state)
+
+    switch state.box_cursor.mouse_mode {
+    case .MOVE:
+        return
+    case .BRUSH_SELECT:
+        return
+    case .FACE_SELECT:
+        draw_box_cursor_face_select(state)
+    case .FACE_EDIT:
+        draw_box_cursor_face_grabbing(state)
+    }
+}
+
 @(private="file")
 get_cursor_face_pos_from_face_index :: proc(face_index : i32, state : ^app_state) -> vec3 {
     switch face_index {
@@ -242,21 +265,6 @@ get_cursor_face_pos_from_face_index :: proc(face_index : i32, state : ^app_state
         return state.box_cursor.max
     case: 
         panic("invalid face Index")
-    }
-}
-
-draw_box_cursor :: proc(state : ^app_state) {
-    draw_box_line_renderer_aabb(state.box_cursor.min, state.box_cursor.max, state.box_cursor.color, state)
-
-    switch state.box_cursor.mouse_mode {
-    case .MOVE:
-        return
-    case .BRUSH_SELECT:
-        return
-    case .FACE_SELECT:
-        draw_box_cursor_face_select(state)
-    case .FACE_EDIT:
-        draw_box_cursor_face_grabbing(state)
     }
 }
 
