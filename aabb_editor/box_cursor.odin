@@ -75,7 +75,6 @@ start_box_cursor_mouse_click :: proc (state : ^app_state) {
     case .FACE_SELECT:
         start_box_cursor_face_select(state.box_cursor.selected_face_index, state)
     case .FACE_EDIT:
-        fmt.print("Start face editing")
         start_box_cursor_face_grabbing(ray, result, state)
     case:
         fmt.panicf("box_cursor_mouse_mode not implemented: %s", state.box_cursor.mouse_mode)
@@ -84,7 +83,7 @@ start_box_cursor_mouse_click :: proc (state : ^app_state) {
 
 @(private="file")
 start_box_cursor_move :: proc (face_index : i32, state : ^app_state) {
-    panic("start_box_cursor_move not implemented!")
+    //currently unused 
 }
 
 @(private="file")

@@ -61,7 +61,6 @@ get_ray_from_mouse_pos :: proc(state : ^app_state) -> ray {
 }
 
 ray_aabb_intersection :: proc (ray : ray, aabb : aabb) -> (result: ray_aabb_intersection_result, is_hit : bool)  {
-
     //todo: fix divided by zero
     t1 := f32 (aabb.min.x - ray.origin.x) / ray.direction.x
     t2 := f32 (aabb.max.x - ray.origin.x) / ray.direction.x
@@ -105,7 +104,8 @@ ray_aabb_intersection :: proc (ray : ray, aabb : aabb) -> (result: ray_aabb_inte
 //     return -1.0
 // }
 
-get_xz_plane_intersection_from_mouse_pos :: proc (state : ^app_state, plane_y : f32 = 0.0, positive_traversal_only : bool = false) -> (intersection : vec3, has_intersection:bool) {
+get_xz_plane_intersection_from_mouse_pos :: proc (state : ^app_state, plane_y : f32 = 0.0, positive_traversal_only : 
+bool = false) -> (intersection : vec3, has_intersection:bool) {
     ray := get_ray_from_mouse_pos(state)    
 
     if ray.direction.y == 0.0 do return {}, false //ray is parallel to the plane
@@ -119,7 +119,8 @@ get_xz_plane_intersection_from_mouse_pos :: proc (state : ^app_state, plane_y : 
     return intersection, true
 }
 
-get_xy_plane_intersection_from_mouse_pos :: proc (state : ^app_state,  plane_z : f32 = 0.0, positive_traversal_only : bool = false) -> (intersection : vec3, has_intersection:bool) {
+get_xy_plane_intersection_from_mouse_pos :: proc (state : ^app_state,  plane_z : f32 = 0.0, positive_traversal_only : 
+bool = false) -> (intersection : vec3, has_intersection:bool) {
     ray := get_ray_from_mouse_pos(state)    
 
     if ray.direction.z == 0.0 do return {}, false //ray is parallel to the plane
@@ -133,7 +134,8 @@ get_xy_plane_intersection_from_mouse_pos :: proc (state : ^app_state,  plane_z :
     return intersection, true
 }
 
-get_zy_plane_intersection_from_mouse_pos :: proc (state : ^app_state,  plane_x : f32 = 0.0, positive_traversal_only : bool = false) -> (intersection : vec3, has_intersection:bool) {
+get_zy_plane_intersection_from_mouse_pos :: proc (state : ^app_state,  plane_x : f32 = 0.0, positive_traversal_only : 
+bool = false) -> (intersection : vec3, has_intersection:bool) {
     ray := get_ray_from_mouse_pos(state)    
 
     if ray.direction.x == 0.0 do return {}, false //ray is parallel to the plane

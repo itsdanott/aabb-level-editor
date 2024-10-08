@@ -1,7 +1,6 @@
 package aabb_editor
 
 import gl "vendor:OpenGL"
-import sa "core:container/small_array"
 import "core:fmt"
 import "core:math/linalg"
 max_line_render_handle_count :: 32
@@ -14,13 +13,12 @@ line_render_handle :: struct {
 line_renderer_state :: struct {
     vao, vbo : u32,
     model_matrix : mat4,
-    // lines : sa.Small_Array(max_line_render_handle_count, line_render_handle),
     lines : [dynamic]line_render_handle,
 }
 
 make_line_renderer_state :: proc () -> line_renderer_state{
     return {
-        model_matrix = linalg.matrix4_translate(vec3{0,0,0}),//create_model_matrix({0,0,0}, {1,1,1}),
+        model_matrix = linalg.matrix4_translate(vec3{0,0,0}),
     }
 }
 
@@ -43,7 +41,6 @@ init_line_renderer :: proc (state : ^app_state) {
     when ODIN_OS == .Windows || ODIN_OS == .Linux {
         gl.LineWidth(2)
     }
-    // gl.Enable(gl.LINE_SMOOTH)
     reserve(&state.line_renderer.lines, max_line_render_handle_count)
 }
 

@@ -12,6 +12,7 @@ init_base_path :: proc () {
     when ODIN_OS == .Darwin do executable_path := os.args[0]
     else when ODIN_OS == .Windows{
         executable_path, new_allocation := filepath.to_slash(os.args[0])
+        //todo: check for leak
         // assert(!new_allocation)
     } else do panic("No basepath implementation for this platform!")
     
@@ -22,9 +23,8 @@ init_base_path :: proc () {
 from_base_path :: proc(file_path : string) -> string {
     combined_str := []string { base_path, "/", file_path}
 
-    when ODIN_OS == .Windows {
-        str := filepath.join(combined_str)
-    } else when ODIN_OS == .Darwin || ODIN_OS == .Linux {
+    when ODIN_OS == .Windows do str := filepath.join(combined_str)
+    else when ODIN_OS == .Darwin || ODIN_OS == .Linux {
         str, err := filepath.join(combined_str)
         assert(err == nil)
     } else do panic("Platform not supported:", ODIN_OS)
