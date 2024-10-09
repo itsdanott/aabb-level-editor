@@ -71,14 +71,13 @@ process_editor_input :: proc (state: ^app_state) {
     } else if state.editor.left_mouse.is_pressed{
         if !imgui_hover do update_box_cursor_grabbing(state)
     } else do finish_box_cursor_grabbing(state)
-
-
-    if imgui_hover do return
  
     if state.editor.input_cam_orbit.is_pressed && !state.editor.left_mouse.is_pressed {
         camera_mouse_orbit(state)
         return 
     }
+
+    if imgui_hover do return
 
     if state.editor.right_mouse.is_pressed do camera_mouse_rotate_pitch_and_yaw(state)
 
