@@ -5,8 +5,6 @@ import "core:math/linalg"
 import "core:strings"
 import "vendor:glfw"
 import imgui "../third-party/odin-imgui"
-import "../third-party/odin-imgui/imgui_impl_glfw"
-import "../third-party/odin-imgui/imgui_impl_opengl3"
 
 USE_IMGUI_MULTIWINDOW :: #config(USE_IMGUI_MULTIWINDOW, false)
 HALF_PI : f32 : linalg.PI * 0.5
@@ -27,33 +25,8 @@ make_editor_state :: proc() -> editor_state {
     }
 }
 
-init_imgui :: proc(state : ^app_state) -> bool {
-    imgui.CHECKVERSION()
-    imgui.CreateContext()
-    state.editor.io = imgui.GetIO()
-    state.editor.io.ConfigFlags += {.NavEnableKeyboard, .NavEnableGamepad}
-    
-    // Docking only
-    when USE_IMGUI_MULTIWINDOW do state.editor.io.ConfigFlags += { .ViewportsEnable}
-    
-    state.editor.io.ConfigFlags += { .DockingEnable}
-    style := imgui.GetStyle()
-    style.WindowRounding = 0
-    style.Colors[imgui.Col.WindowBg].w = 1
-    
-
-    imgui.StyleColorsDark()
-
-    if !imgui_impl_glfw.InitForOpenGL(glfw_window, true) do return false
-    if !imgui_impl_opengl3.Init("#version 150") do return false
-
+init_editor :: proc (state : ^app_state) -> bool {
     return true
-}
-
-cleanup_imgui :: proc() {
-    imgui_impl_opengl3.Shutdown()
-    imgui_impl_glfw.Shutdown()
-    imgui.DestroyContext()
 }
 
 @(private="file")
@@ -181,16 +154,13 @@ process_editor_input :: proc (state: ^app_state) {
 draw_editor_ui :: proc (state : ^app_state) {
     if !state.editor.is_editor_visible do return
     
-    imgui_impl_opengl3.NewFrame()
-    imgui_impl_glfw.NewFrame()
-    imgui.NewFrame()
+    imgui_new_frame()
     
     // imgui.ShowDemoWindow()
     draw_editor_main_menu(state)
     draw_editor_settings_window(state)
     
-    imgui.Render()
-    imgui_impl_opengl3.RenderDrawData(imgui.GetDrawData())
+    imgui_render()
     
     // Docking only
     when USE_IMGUI_MULTIWINDOW {
