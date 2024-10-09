@@ -27,6 +27,8 @@ main :: proc() {
     
     if !aabb_editor.init_imgui(&app_state) do return
     defer aabb_editor.cleanup_imgui()
+
+    if !aabb_editor.init_editor(&app_state) do return
     
     defer aabb_editor.cleanup_textures(&app_state)
     
