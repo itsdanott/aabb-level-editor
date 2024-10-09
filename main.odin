@@ -18,6 +18,7 @@ main :: proc() {
     aabb_editor.init_base_path()
 
     app_state := aabb_editor.make_app_state()
+    defer aabb_editor.cleanup_input(&app_state)
 
     if !aabb_editor.init_glfw() do return
     defer glfw.Terminate()
