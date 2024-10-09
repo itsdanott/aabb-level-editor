@@ -20,8 +20,11 @@ wanted_backends = ["opengl3", "glfw"]
 ```
 Then follow the build instructions in the [Odin ImGui Readme](https://gitlab.com/L-4/odin-imgui/-/blob/main/README.md) in order to build the odin-imgui dependencies for your platform.
 
+### Subfolders
+In order for relative paths to work - output the binary to a subfolder in project root (e.g. "build-debug" / "build-release")
+
 ## Wheel Reinvention Jam 2024
-The goal for the Wheel Reinvention Jam 2024 was to get started with learning the odin programming language. Ideally only the odin vendor libraries will be used (except for e.g. imgui).
+The goal for the Wheel Reinvention Jam 2024 is to get started with learning the odin programming language. Ideally only the odin vendor libraries will be used (except for e.g. imgui).
 
 ### Main Goals:
 * Create AABB brushes 
