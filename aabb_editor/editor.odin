@@ -75,7 +75,7 @@ process_editor_input :: proc (state: ^app_state) {
 
     if imgui_hover do return
  
-    if state.editor.input_cam_orbit.is_pressed {
+    if state.editor.input_cam_orbit.is_pressed && !state.editor.left_mouse.is_pressed {
         camera_mouse_orbit(state)
         return 
     }
