@@ -59,7 +59,8 @@ main :: proc() {
 
         //update
         glfw.PollEvents()  
-        aabb_editor.glfw_process_callbacks(&app_state)        
+        aabb_editor.glfw_process_callbacks(&app_state)       
+        aabb_editor.update_input(&app_state) 
         aabb_editor.update_camera_matrices(&app_state.camera)        
         aabb_editor.process_editor_input(&app_state)
 

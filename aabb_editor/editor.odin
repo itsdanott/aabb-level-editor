@@ -13,7 +13,9 @@ editor_state :: struct {
     is_editor_visible : bool,
     show_settings_window : bool,
     io : ^imgui.IO,
-    was_mouse_down, was_alt_pressed : bool,
+    //todo: instead of caching the input_btn_states all over the place - add a specific input_mapping struct for that 
+    left_mouse, right_mouse, input_cam_orbit, input_cam_back, input_cam_forward, input_cam_right, input_cam_left, input_cam_up,
+    input_cam_down, input_cam_yaw_right, input_cam_yaw_left : ^input_btn_state,
     mouse_pos, last_mouse_pos, mouse_delta, mouse_delta_normalized : vec2,
 }
 
@@ -26,6 +28,21 @@ make_editor_state :: proc() -> editor_state {
 }
 
 init_editor :: proc (state : ^app_state) -> bool {
+    state.editor.left_mouse = listen_for_input_mouse_btn(glfw.MOUSE_BUTTON_LEFT, state)
+    state.editor.right_mouse = listen_for_input_mouse_btn(glfw.MOUSE_BUTTON_RIGHT, state)
+
+    state.editor.input_cam_orbit = listen_for_input_key(glfw.KEY_LEFT_ALT, state)
+
+    state.editor.input_cam_forward = listen_for_input_key(glfw.KEY_W, state)
+    state.editor.input_cam_back = listen_for_input_key(glfw.KEY_S, state)
+    state.editor.input_cam_left = listen_for_input_key(glfw.KEY_A, state)
+    state.editor.input_cam_right = listen_for_input_key(glfw.KEY_D, state)
+
+    state.editor.input_cam_up = listen_for_input_key(glfw.KEY_E, state)
+    state.editor.input_cam_down = listen_for_input_key(glfw.KEY_Q, state)
+
+    state.editor.input_cam_yaw_right = listen_for_input_key(glfw.KEY_RIGHT, state)
+    state.editor.input_cam_yaw_left = listen_for_input_key(glfw.KEY_LEFT, state)
     return true
 }
 
@@ -46,22 +63,24 @@ update_mouse_pos :: proc (state : ^app_state) {
 
 process_editor_input :: proc (state: ^app_state) {
     update_mouse_pos(state)
-    
-    alt_pressed := glfw.GetKey(glfw_window, glfw.KEY_LEFT_ALT) == glfw.PRESS
-    if !alt_pressed && state.editor.was_alt_pressed do state.editor.was_alt_pressed = false
-    mouse_button_left_press := glfw.GetMouseButton(glfw_window, glfw.MOUSE_BUTTON_LEFT) == glfw.PRESS
-    mouse_button_right_press : = glfw.GetMouseButton(glfw_window, glfw.MOUSE_BUTTON_RIGHT) == glfw.PRESS
 
-    if mouse_button_left_press {
-        if !state.editor.was_mouse_down {
-            state.editor.was_mouse_down = true
-            if !state.editor.io.WantCaptureMouse do start_box_cursor_mouse_click(state)    
-        } else if !state.editor.io.WantCaptureMouse do update_box_cursor_grabbing(state)
-    } else if state.editor.was_mouse_down {
-        state.editor.was_mouse_down = false
+    //TODO: improve the ux here, current camera orbit with alt press in combination with mouse grabbing introduces teleport issues!
+    imgui_hover := state.editor.io.WantCaptureMouse
+    if state.editor.left_mouse.is_start_press {
+        if !imgui_hover do start_box_cursor_mouse_click(state)
+    } else if state.editor.left_mouse.is_pressed{
+        if !imgui_hover do update_box_cursor_grabbing(state)
+    } else do finish_box_cursor_grabbing(state)
 
-        finish_box_cursor_grabbing(state)
+
+    if imgui_hover do return
+ 
+    if state.editor.input_cam_orbit.is_pressed {
+        camera_mouse_orbit(state)
+        return 
     }
+
+    if state.editor.right_mouse.is_pressed do camera_mouse_rotate_pitch_and_yaw(state)
 
     cam_velocity : vec3 = {0,0,0}
 
@@ -69,85 +88,25 @@ process_editor_input :: proc (state: ^app_state) {
     cam_right := state.camera.right
     cam_up := state.camera.up
 
-    if glfw.GetKey(glfw_window, glfw.KEY_W) == glfw.PRESS do cam_velocity += cam_forward 
-    if glfw.GetKey(glfw_window, glfw.KEY_S) == glfw.PRESS do cam_velocity -= cam_forward 
-    if glfw.GetKey(glfw_window, glfw.KEY_D) == glfw.PRESS do cam_velocity += cam_right 
-    if glfw.GetKey(glfw_window, glfw.KEY_A) == glfw.PRESS do cam_velocity -= cam_right 
+    //keyboard cam movement input
+    if state.editor.input_cam_forward.is_pressed    do cam_velocity += cam_forward 
+    if state.editor.input_cam_back.is_pressed       do cam_velocity -= cam_forward 
+    if state.editor.input_cam_left.is_pressed       do cam_velocity -= cam_right 
+    if state.editor.input_cam_right.is_pressed      do cam_velocity += cam_right 
     
-    if glfw.GetKey(glfw_window, glfw.KEY_Q) == glfw.PRESS do cam_velocity -= cam_up
-    if glfw.GetKey(glfw_window, glfw.KEY_E) == glfw.PRESS do cam_velocity += cam_up
+    if state.editor.input_cam_down.is_pressed       do cam_velocity -= cam_up
+    if state.editor.input_cam_up.is_pressed         do cam_velocity += cam_up
     
-    //keyboard rotation
-    if glfw.GetKey(glfw_window, glfw.KEY_RIGHT) == glfw.PRESS do state.camera.rot = state.camera.rot * 
-        linalg.quaternion_angle_axis_f32(linalg.to_radians(state.camera.rot_key_sensitivity * delta_time), {0,1,0})
-    if glfw.GetKey(glfw_window, glfw.KEY_LEFT) == glfw.PRESS do state.camera.rot = state.camera.rot *
-        linalg.quaternion_angle_axis_f32(linalg.to_radians(-state.camera.rot_key_sensitivity * delta_time), {0,1,0})
-
+    //keyboard cam rotation input
+    if state.editor.input_cam_yaw_right.is_pressed  do state.camera.rot = state.camera.rot * 
+    linalg.quaternion_angle_axis_f32(linalg.to_radians(state.camera.rot_key_sensitivity * delta_time), {0,1,0})
+    if state.editor.input_cam_yaw_left.is_pressed   do state.camera.rot = state.camera.rot *
+    linalg.quaternion_angle_axis_f32(linalg.to_radians(-state.camera.rot_key_sensitivity * delta_time), {0,1,0})
+    
     if(linalg.vector_length(cam_velocity) > 0.2){
         cam_velocity = linalg.vector_normalize(cam_velocity)
         state.camera.pos += cam_velocity * state.camera.move_speed * delta_time
     }
- 
-    if !alt_pressed {
-        if mouse_button_right_press {
-            if linalg.vector_length(state.editor.mouse_delta) > linalg.F32_EPSILON {
-                pitch_angle : f32 = -state.editor.mouse_delta.y * state.camera.rot_mouse_sensitivity_y * delta_time
-                yaw_angle : f32 = -state.editor.mouse_delta.x * state.camera.rot_mouse_sensitivity_x * delta_time
-                
-                yaw_quat : quaternion128 = linalg.quaternion_angle_axis_f32(
-                    linalg.to_radians(yaw_angle), vec3{0.0, 1.0, 0.0})
-                    
-                pitch_quat : quaternion128 = linalg.quaternion_angle_axis_f32(
-                    linalg.to_radians(pitch_angle), state.camera.right)
-                
-                state.camera.lerp_rot = state.camera.lerp_rot * yaw_quat
-                state.camera.lerp_rot = state.camera.lerp_rot * pitch_quat
-                
-                state.camera.lerp_rot = linalg.quaternion_normalize(state.camera.lerp_rot)
-
-            }
-            //TODO: fix roll rotation appearing when rot lerping
-            //TODO: maybe lerp the yaw and pitch instead of the quat?
-            // state.camera.rot = linalg.lerp(state.camera.rot, state.camera.lerp_rot, state.camera.rot_lerp_speed * delta_time)
-            // state.camera.rot = linalg.quaternion_normalize(state.camera.rot)
-            //this is the temporary hard setting of the value:
-            state.camera.rot = state.camera.lerp_rot
-        }
-    } else {
-        camera_target := linalg.lerp(state.box_cursor.min, state.box_cursor.max, 0.5)
-        if !state.editor.was_alt_pressed {
-            state.editor.was_alt_pressed = true
-            state.box_cursor.camera_distance = linalg.distance(camera_target, state.camera.pos)
-            look_quat := linalg.quaternion_look_at_f32(state.camera.pos, camera_target, vec3{0.0,1.0,0.0} )
-            //TODO: smooth the pitch and yaw transition
-            // state.box_cursor.camera_pitch = linalg.pitch_from_quaternion(look_quat)
-            // state.box_cursor.camera_yaw = linalg.yaw_from_quaternion(look_quat)
-        } else /*if linalg.abs(glfw_scroll.y) > linalg.F32_EPSILON*/ do state.box_cursor.camera_distance = linalg.max(
-            state.box_cursor.camera_distance -glfw_scroll.y, 0.5)
-        
-        if linalg.abs(state.editor.mouse_delta.x) > linalg.F32_EPSILON do state.box_cursor.camera_yaw +=
-            state.editor.mouse_delta.x * state.camera.orbit_sensitivity * delta_time
-            
-        if linalg.abs(state.editor.mouse_delta.y) > linalg.F32_EPSILON do state.box_cursor.camera_pitch +=
-            state.editor.mouse_delta.y * state.camera.orbit_sensitivity * delta_time
-
-        state.box_cursor.camera_pitch = linalg.clamp(state.box_cursor.camera_pitch, -HALF_PI + linalg.F32_EPSILON,
-            HALF_PI - linalg.F32_EPSILON)
-
-        pitch := state.box_cursor.camera_pitch
-        yaw := state.box_cursor.camera_yaw
-
-        orbit_x := state.box_cursor.camera_distance * linalg.cos(pitch) * linalg.sin(yaw)
-        orbit_y := state.box_cursor.camera_distance * linalg.sin(pitch)
-        orbit_z := state.box_cursor.camera_distance * linalg.cos(pitch) * linalg.cos(yaw)
-
-        state.camera.lerp_pos = camera_target + {orbit_x, orbit_y, orbit_z}
-        state.camera.pos = linalg.lerp(state.camera.pos, state.camera.lerp_pos, state.camera.pos_lerp_speed * 
-            delta_time)
-
-        state.camera.rot = linalg.quaternion_look_at_f32(state.camera.pos, camera_target, vec3{0.0,1.0,0.0} )
-        state.camera.lerp_rot = state.camera.rot
-    } 
 }
 
 //2d--------------------------------------------------------------------------------------------------------------------
@@ -168,7 +127,7 @@ draw_editor_ui :: proc (state : ^app_state) {
         imgui.UpdatePlatformWindows()
         imgui.RenderPlatformWindowsDefault()
         glfw.MakeContextCurrent(backup_current_window)
-    }    
+    }
 }
 
 @(private="file")
