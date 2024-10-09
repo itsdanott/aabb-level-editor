@@ -37,6 +37,7 @@ app_state :: struct {
     texture_array_id : u32,
     selected_brush : ^brush,
     is_mouse_hit : bool, //TODO: to be used to get the aabb edge points
+    input : input_state,
 }
 
 make_app_state :: proc() -> app_state{
@@ -51,6 +52,7 @@ make_app_state :: proc() -> app_state{
         box_cursor = make_box_cursor_state(),
         brush_renderer = make_brush_renderer_state(),
         selected_brush = nil,
+        input = make_input_state(),
     }
 }
 
