@@ -95,3 +95,15 @@ draw_grid :: proc(state : ^app_state) {
     gl.DrawArrays(gl.TRIANGLES, 0, 6)
     gl.Disable(gl.BLEND)
 }
+
+get_world_pos_snapped :: proc(world_pos : vec3, state : ^app_state) -> vec3 {
+    return {
+        math.floor(world_pos.x / state.editor.snap_factor) * state.editor.snap_factor,
+        math.floor(world_pos.y / state.editor.snap_factor) * state.editor.snap_factor,
+        math.floor(world_pos.z / state.editor.snap_factor) * state.editor.snap_factor,
+    }    
+}
+
+get_world_coord_snapped :: proc (world_coord : f32, state : ^app_state) -> f32 {
+    return math.floor(world_coord / state.editor.snap_factor) * state.editor.snap_factor,
+}

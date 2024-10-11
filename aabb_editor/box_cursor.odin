@@ -137,8 +137,7 @@ update_box_cursor_move_grab :: proc (state : ^app_state){
     
     if has_xz_intersection {
         scale := state.box_cursor.max - state.box_cursor.min
-        state.box_cursor.min = snap_key_pressed ? vec3{math.floor(xz_intersection.x), math.floor(xz_intersection.y), 
-            math.floor(xz_intersection.z)} : xz_intersection
+        state.box_cursor.min = snap_key_pressed ? get_world_pos_snapped(xz_intersection, state) : xz_intersection
         state.box_cursor.max = state.box_cursor.min + scale
         update_selected_brush_min_max(state.box_cursor.min, state.box_cursor.max, state)
     }
@@ -157,13 +156,16 @@ update_box_cursor_face_edit :: proc (state : ^app_state){
     switch state.box_cursor.selected_face_index {
     case 0..<2: //X
         xy_point, has_xy_intersection := get_xy_plane_intersection_from_mouse_pos(state, state.box_cursor.min.z, false)           
-        if has_xy_intersection do state.box_cursor.face_pos.x = snap_key_pressed ? math.floor(xy_point.x) : xy_point.x
+        if has_xy_intersection do state.box_cursor.face_pos.x = snap_key_pressed ? get_world_coord_snapped(
+            xy_point.x, state) : xy_point.x
     case 2..<4: //Y
         xy_point, has_xy_intersection := get_xy_plane_intersection_from_mouse_pos(state, state.box_cursor.min.z, false)           
-        if has_xy_intersection do state.box_cursor.face_pos.y = snap_key_pressed ? math.floor(xy_point.y) : xy_point.y
+        if has_xy_intersection do state.box_cursor.face_pos.y = snap_key_pressed ? get_world_coord_snapped(
+            xy_point.y, state) : xy_point.y
     case 4..<6: //Z
         zy_point, has_zy_intersection := get_zy_plane_intersection_from_mouse_pos(state, state.box_cursor.min.x, false)           
-        if has_zy_intersection do state.box_cursor.face_pos.z = snap_key_pressed ? math.floor(zy_point.z) : zy_point.z
+        if has_zy_intersection do state.box_cursor.face_pos.z = snap_key_pressed ? get_world_coord_snapped(
+            zy_point.z, state) : zy_point.z
     case: panic("aabb face index out of range!")
     }
 }

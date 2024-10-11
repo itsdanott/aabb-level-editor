@@ -2,6 +2,7 @@ package aabb_editor
 import "core:math/linalg"
 import "core:math"
 import "vendor:glfw"
+import "core:fmt"
 
 ray :: struct {
     origin, direction : vec3,
@@ -22,8 +23,8 @@ plane :: struct {
 
 get_snapped_world_pos_from_mouse_pos :: proc(state : ^app_state) -> vec3 {
     world_pos := get_world_pos_from_mouse_pos(state)
-    world_pos_snapped := vec3{ math.floor(world_pos.x),math.floor(world_pos.y), math.floor(world_pos.z)}
-    return world_pos_snapped
+    
+    return get_world_pos_snapped(world_pos, state)
 }
 
 get_world_space_from_mouse_pos :: proc(state : ^app_state) -> vec4 {

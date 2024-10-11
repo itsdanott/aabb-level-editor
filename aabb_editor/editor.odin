@@ -18,6 +18,7 @@ editor_state :: struct {
     left_mouse, right_mouse, input_cam_orbit, input_cam_back, input_cam_forward, input_cam_right, input_cam_left, input_cam_up,
     input_cam_down, input_cam_yaw_right, input_cam_yaw_left : ^input_btn_state,
     mouse_pos, last_mouse_pos, mouse_delta, mouse_delta_normalized : vec2,
+    snap_factor : f32,
 }
 
 make_editor_state :: proc() -> editor_state {
@@ -25,6 +26,7 @@ make_editor_state :: proc() -> editor_state {
         is_editor_visible = true,
         show_settings_window = true,
         io = nil,
+        snap_factor = 1.0,
     }
 }
 
@@ -156,6 +158,12 @@ draw_editor_settings_window :: proc (state : ^app_state) {
     flags : imgui.WindowFlags : {.NoTitleBar}
     
     if imgui.Begin("Settings", nil, flags) {
+        if imgui.TreeNode("Snapping") {
+            if imgui.DragFloat("snap_factor", &state.editor.snap_factor, 1.0/8.0, 1.0/8.0, 100.0) {
+                state.grid.cell_size = state.editor.snap_factor
+            }
+            imgui.TreePop()
+        }
         if imgui.TreeNode("Camera") {
             imgui.SeparatorText("Transform")
             imgui.DragFloat3("Camera.Pos", &state.camera.pos)
@@ -177,7 +185,9 @@ draw_editor_settings_window :: proc (state : ^app_state) {
         }
         
         if imgui.TreeNode("Grid") {
-            imgui.DragFloat("Grid.CellSize", &state.grid.cell_size, 0.25, 1.0/16.0, 100.0)
+            if imgui.DragFloat("Grid.CellSize", &state.grid.cell_size, 1.0/8.0, 1.0/8.0, 100.0) {
+                state.editor.snap_factor = state.grid.cell_size
+            }
             imgui.SeparatorText("Transform")
             imgui.DragFloat3("Grid.Pos", &state.grid.pos)
             imgui.DragFloat3("Grid.Scale", &state.grid.scale)
