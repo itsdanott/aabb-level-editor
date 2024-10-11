@@ -177,6 +177,7 @@ draw_editor_settings_window :: proc (state : ^app_state) {
         }
         
         if imgui.TreeNode("Grid") {
+            imgui.DragFloat("Grid.CellSize", &state.grid.cell_size, 0.25, 1.0/16.0, 100.0)
             imgui.SeparatorText("Transform")
             imgui.DragFloat3("Grid.Pos", &state.grid.pos)
             imgui.DragFloat3("Grid.Scale", &state.grid.scale)

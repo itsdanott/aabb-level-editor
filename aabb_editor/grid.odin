@@ -6,15 +6,12 @@ grid_state :: struct {
     pos, scale : vec3,
     vao, vbo : u32,
     shader : ^shader,
-    shader_model_location : i32,
-    shader_view_location : i32,
-    shader_projection_location : i32,
-    shader_view_pos_location : i32,
-    shader_grid_alpha_location : i32,
-    shader_checker_col1_location, shader_checker_col2_location : i32,
+    shader_model_location, shader_view_location, shader_projection_location, shader_view_pos_location, 
+    shader_grid_alpha_location, shader_checker_col1_location, shader_checker_col2_location, shader_cell_size_location,
     shader_grid_fade_dist_location : i32,
     checker_col1, checker_col2 : vec3, 
     grid_alpha, grid_fade_dist : f32,
+    cell_size : f32,
 }
 
 make_grid_state :: proc() -> grid_state {
@@ -24,6 +21,7 @@ make_grid_state :: proc() -> grid_state {
         grid_fade_dist = 32.0,
         checker_col1 = {0,0,0},
         checker_col2 = {1,1,1},
+        cell_size = 1.0,
     }
 }
 
@@ -41,6 +39,7 @@ init_grid :: proc(state : ^app_state) -> bool {
     state.grid.shader_checker_col1_location = gl.GetUniformLocation(state.grid.shader.id, "checkerColor1")
     state.grid.shader_checker_col2_location = gl.GetUniformLocation(state.grid.shader.id, "checkerColor2")
     state.grid.shader_grid_fade_dist_location = gl.GetUniformLocation(state.grid.shader.id, "gridFadeDist")
+    state.grid.shader_cell_size_location = gl.GetUniformLocation(state.grid.shader.id, "cellSize")
 
     vertices := [?]f32 {
         0.0, 0.0, 0.0,
@@ -79,6 +78,8 @@ draw_grid :: proc(state : ^app_state) {
     gl.Enable(gl.BLEND)
     gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
     gl.UseProgram(state.grid.shader.id)
+
+    //TODO: only update unfiroms when they've actually changed!
     gl.UniformMatrix4fv(state.grid.shader_model_location, 1, false, &model[0][0])
     gl.UniformMatrix4fv(state.grid.shader_view_location, 1, false, &state.camera.view_matrix[0][0])
     gl.UniformMatrix4fv(state.grid.shader_projection_location, 1, false, &state.camera.projection_matrix[0][0])
@@ -89,6 +90,7 @@ draw_grid :: proc(state : ^app_state) {
          state.grid.checker_col2.b)
     gl.Uniform1f(state.grid.shader_grid_alpha_location, state.grid.grid_alpha)
     gl.Uniform1f(state.grid.shader_grid_fade_dist_location, state.grid.grid_fade_dist)
+    gl.Uniform1f(state.grid.shader_cell_size_location, state.grid.cell_size)
     gl.BindVertexArray(state.grid.vao)
     gl.DrawArrays(gl.TRIANGLES, 0, 6)
     gl.Disable(gl.BLEND)
