@@ -43,15 +43,13 @@ void main()
     vec3 worldPos = (model * vec4(inPos, 1.0)).xyz;    
     vec3 inNormal = vertexNormals[inVertNormalIndex];
     vec2 adjustedTexCoords;
+        
+    float weightX = step(0.9, abs(inNormal.x));
+    float weightY = step(0.9, abs(inNormal.y));
 
-    if (abs(inNormal.x) > 0.9) {
-        adjustedTexCoords = worldPos.yz;
-    } else if (abs(inNormal.y) > 0.9) { 
-        adjustedTexCoords = worldPos.xz;
-    } else {
-        adjustedTexCoords = worldPos.xy;
-    }
-    
+    adjustedTexCoords = mix(worldPos.xy, worldPos.xz, weightY);
+    adjustedTexCoords = mix(adjustedTexCoords, worldPos.yz, weightX);
+
     TexCoords = adjustedTexCoords;
     TextureId = inTextureId;
 }
