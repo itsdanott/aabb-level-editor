@@ -136,6 +136,20 @@ create_brush_from_box_cursor :: proc (state : ^app_state, select : bool = true) 
     append(&state.brushes, brush)
     if select do select_brush(brush, state)
 }
+
+delete_brush :: proc(brush : ^brush, state : ^app_state) {
+    brush_index := -1
+    for b, index in state.brushes {
+        if brush.id == b.id {
+            brush_index = index
+            break
+        }
+    }
+    assert(brush_index > -1)
+    if state.selected_brush.id == brush.id do deselect_brush(state)
+    ordered_remove(&state.brushes, brush_index)
+    
+    free(brush)
 }
 
 cleanup_brushes :: proc (state : ^app_state){

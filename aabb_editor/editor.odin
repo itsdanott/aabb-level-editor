@@ -236,9 +236,11 @@ draw_editor_settings_window :: proc (state : ^app_state) {
             }
 
             imgui.SeparatorText("Submit")
-            if imgui.Button("Create Brush") {
-                create_brush_from_box_cursor(state)
-            }
+            if imgui.Button("Create Brush") do create_brush_from_box_cursor(state)
+            if state.selected_brush != nil {
+                imgui.SameLine()
+                if imgui.Button("Delete Brush") do delete_brush(state.selected_brush, state)
+            } 
             
             imgui.TreePop()
         }
