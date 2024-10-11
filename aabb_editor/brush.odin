@@ -183,6 +183,12 @@ deselect_brush :: proc (state : ^app_state){
     state.selected_brush = nil
 }
 
+update_selected_brush_min_max :: proc (min, max :vec3,  state : ^app_state) {
+    if state.selected_brush == nil do return
+    state.selected_brush.min = min
+    state.selected_brush.max = max
+}
+
 assign_texture_to_brush :: proc (brush : ^brush, array_texture_index : i32) {
     for &vertex in brush.vertices {
         vertex.texture_id = array_texture_index

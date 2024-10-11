@@ -140,6 +140,7 @@ update_box_cursor_move_grab :: proc (state : ^app_state){
         state.box_cursor.min = snap_key_pressed ? vec3{math.floor(xz_intersection.x), math.floor(xz_intersection.y), 
             math.floor(xz_intersection.z)} : xz_intersection
         state.box_cursor.max = state.box_cursor.min + scale
+        update_selected_brush_min_max(state.box_cursor.min, state.box_cursor.max, state)
     }
 }
 
@@ -233,6 +234,8 @@ finish_box_cursor_face_grab :: proc (state : ^app_state) {
         } 
     case: panic("aabb face index out of range!")
     }
+    
+    update_selected_brush_min_max(state.box_cursor.min, state.box_cursor.max, state)
 }
 
 //draw -----------------------------------------------------------------------------------------------------------------
