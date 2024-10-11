@@ -81,6 +81,18 @@ aabb_face_index_to_axis :: proc (face_index : i32) -> vec3 {
     }
 }
 
+aabb_face_index_to_normal :: proc (face_index : i32) -> vec3 {
+    switch face_index {
+    case AABB_FACE_INDEX_X_NEGATIVE: return vec3{-1,0,0}
+    case AABB_FACE_INDEX_X_POSITIVE: return vec3{1,0,0}
+    case AABB_FACE_INDEX_Y_NEGATIVE: return vec3{0,-1,0}
+    case AABB_FACE_INDEX_Y_POSITIVE: return vec3{0,1,0}
+    case AABB_FACE_INDEX_Z_NEGATIVE: return vec3{0,0,-1}
+    case AABB_FACE_INDEX_Z_POSITIVE: return vec3{0,0,1}
+    case: panic("aabb face index out of range!")
+    }
+}
+
 aabb_face_index_to_perpendicular_plane_normal :: proc (face_index : i32) -> vec3 {
     switch face_index {
     case AABB_FACE_INDEX_X_NEGATIVE:

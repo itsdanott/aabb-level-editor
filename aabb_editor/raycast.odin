@@ -12,6 +12,7 @@ ray_aabb_intersection_result :: struct {
     hit_point : vec3,
     t : f32,
     hit_face_index : i32,
+    hit_normal : vec3,
 }
 
 plane :: struct {
@@ -88,6 +89,8 @@ ray_aabb_intersection :: proc (ray : ray, aabb : aabb) -> (result: ray_aabb_inte
     else if t_min == t4 do result.hit_face_index = AABB_FACE_INDEX_Y_POSITIVE
     else if t_min == t5 do result.hit_face_index = AABB_FACE_INDEX_Z_NEGATIVE
     else if t_min == t6 do result.hit_face_index = AABB_FACE_INDEX_Z_POSITIVE
+
+    result.hit_normal = aabb_face_index_to_normal(result.hit_face_index)
 
     return result, true
 }
