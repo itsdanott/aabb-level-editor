@@ -21,10 +21,13 @@ init_brush_renderer :: proc (state : ^app_state) {
     gl.VertexAttribPointer(0, 2, gl.FLOAT, gl.FALSE, size_of(brush_vertex), 0)
     
     gl.EnableVertexAttribArray(1)
-    gl.VertexAttribIPointer(1, 1, gl.INT, size_of(brush_vertex), 2 * size_of(f32))
+    gl.VertexAttribIPointer(1, 1, gl.INT, size_of(brush_vertex), offset_of(brush_vertex, vert_pos_index))
 
     gl.EnableVertexAttribArray(2)
-    gl.VertexAttribIPointer(2, 1, gl.INT, size_of(brush_vertex), 2 * size_of(f32) + size_of(i32))
+    gl.VertexAttribIPointer(2, 1, gl.INT, size_of(brush_vertex), offset_of(brush_vertex, vert_normal_index))
+
+    gl.EnableVertexAttribArray(3)
+    gl.VertexAttribIPointer(3, 1, gl.INT, size_of(brush_vertex), offset_of(brush_vertex, texture_id))
 }
 
 cleanup_brush_renderer :: proc (state : ^app_state) {
@@ -54,6 +57,7 @@ brush :: struct {
 brush_vertex :: struct {
     texcoord : vec2,
     vert_pos_index : i32,
+    vert_normal_index : i32,
     texture_id : i32,
 }
 
@@ -74,58 +78,58 @@ create_brush_from_box_cursor :: proc (state : ^app_state) {
         max = state.box_cursor.max,
         vertices = {
             //AABB_FACE_INDEX_X_NEGATIVE: Triangle-Left-1
-            {{0, 0}, AABB_VERTPOS_INDEX_LEFT_BOTTOM_BACK, 0},
-            {{1, 0}, AABB_VERTPOS_INDEX_LEFT_BOTTOM_FRONT, 0},
-            {{1, 1}, AABB_VERTPOS_INDEX_LEFT_TOP_FRONT, 0},
+            {{0, 0}, AABB_VERTPOS_INDEX_LEFT_BOTTOM_BACK, AABB_FACE_INDEX_X_NEGATIVE, 0},
+            {{1, 0}, AABB_VERTPOS_INDEX_LEFT_BOTTOM_FRONT, AABB_FACE_INDEX_X_NEGATIVE, 0},
+            {{1, 1}, AABB_VERTPOS_INDEX_LEFT_TOP_FRONT, AABB_FACE_INDEX_X_NEGATIVE, 0},
             //AABB_FACE_INDEX_X_NEGATIVE: Triangle-Left-2
-            {{0, 0}, AABB_VERTPOS_INDEX_LEFT_BOTTOM_BACK, 0},
-            {{1, 1}, AABB_VERTPOS_INDEX_LEFT_TOP_FRONT, 0},
-            {{0, 1}, AABB_VERTPOS_INDEX_LEFT_TOP_BACK, 0},
+            {{0, 0}, AABB_VERTPOS_INDEX_LEFT_BOTTOM_BACK, AABB_FACE_INDEX_X_NEGATIVE, 0},
+            {{1, 1}, AABB_VERTPOS_INDEX_LEFT_TOP_FRONT, AABB_FACE_INDEX_X_NEGATIVE, 0},
+            {{0, 1}, AABB_VERTPOS_INDEX_LEFT_TOP_BACK, AABB_FACE_INDEX_X_NEGATIVE, 0},
 
             //AABB_FACE_INDEX_X_POSITIVE: Triangle-Right-1
-            {{0, 0}, AABB_VERTPOS_INDEX_RIGHT_BOTTOM_FRONT, 0},
-            {{1, 0}, AABB_VERTPOS_INDEX_RIGHT_BOTTOM_BACK, 0},
-            {{1, 1}, AABB_VERTPOS_INDEX_RIGHT_TOP_BACK, 0},
+            {{0, 0}, AABB_VERTPOS_INDEX_RIGHT_BOTTOM_FRONT, AABB_FACE_INDEX_X_POSITIVE, 0},
+            {{1, 0}, AABB_VERTPOS_INDEX_RIGHT_BOTTOM_BACK, AABB_FACE_INDEX_X_POSITIVE, 0},
+            {{1, 1}, AABB_VERTPOS_INDEX_RIGHT_TOP_BACK, AABB_FACE_INDEX_X_POSITIVE, 0},
             //AABB_FACE_INDEX_X_POSITIVE: Triangle-Right-2
-            {{0, 0}, AABB_VERTPOS_INDEX_RIGHT_BOTTOM_FRONT, 0},
-            {{1, 1}, AABB_VERTPOS_INDEX_RIGHT_TOP_BACK, 0},
-            {{0, 1}, AABB_VERTPOS_INDEX_RIGHT_TOP_FRONT, 0},
+            {{0, 0}, AABB_VERTPOS_INDEX_RIGHT_BOTTOM_FRONT, AABB_FACE_INDEX_X_POSITIVE, 0},
+            {{1, 1}, AABB_VERTPOS_INDEX_RIGHT_TOP_BACK, AABB_FACE_INDEX_X_POSITIVE, 0},
+            {{0, 1}, AABB_VERTPOS_INDEX_RIGHT_TOP_FRONT, AABB_FACE_INDEX_X_POSITIVE, 0},
             
             //AABB_FACE_INDEX_Y_NEGATIVE : Triangle-Bottom-1
-            {{0, 0}, AABB_VERTPOS_INDEX_LEFT_BOTTOM_BACK, 0},
-            {{1, 0}, AABB_VERTPOS_INDEX_RIGHT_BOTTOM_BACK, 0},
-            {{1, 1}, AABB_VERTPOS_INDEX_RIGHT_BOTTOM_FRONT, 0},
+            {{0, 0}, AABB_VERTPOS_INDEX_LEFT_BOTTOM_BACK, AABB_FACE_INDEX_Y_NEGATIVE, 0},
+            {{1, 0}, AABB_VERTPOS_INDEX_RIGHT_BOTTOM_BACK, AABB_FACE_INDEX_Y_NEGATIVE, 0},
+            {{1, 1}, AABB_VERTPOS_INDEX_RIGHT_BOTTOM_FRONT, AABB_FACE_INDEX_Y_NEGATIVE, 0},
             //AABB_FACE_INDEX_Y_NEGATIVE : Triangle-Bottom-2
-            {{0, 0}, AABB_VERTPOS_INDEX_LEFT_BOTTOM_BACK, 0},
-            {{1, 1}, AABB_VERTPOS_INDEX_RIGHT_BOTTOM_FRONT, 0},
-            {{0, 1}, AABB_VERTPOS_INDEX_LEFT_BOTTOM_FRONT, 0},
+            {{0, 0}, AABB_VERTPOS_INDEX_LEFT_BOTTOM_BACK, AABB_FACE_INDEX_Y_NEGATIVE, 0},
+            {{1, 1}, AABB_VERTPOS_INDEX_RIGHT_BOTTOM_FRONT, AABB_FACE_INDEX_Y_NEGATIVE, 0},
+            {{0, 1}, AABB_VERTPOS_INDEX_LEFT_BOTTOM_FRONT, AABB_FACE_INDEX_Y_NEGATIVE, 0},
             
             //AABB_FACE_INDEX_Y_POSITIVE : Triangle-Top-1
-            {{0, 0}, AABB_VERTPOS_INDEX_LEFT_TOP_FRONT, 0},
-            {{1, 0}, AABB_VERTPOS_INDEX_RIGHT_TOP_FRONT, 0},
-            {{1, 1}, AABB_VERTPOS_INDEX_RIGHT_TOP_BACK, 0},
+            {{0, 0}, AABB_VERTPOS_INDEX_LEFT_TOP_FRONT, AABB_FACE_INDEX_Y_POSITIVE, 0},
+            {{1, 0}, AABB_VERTPOS_INDEX_RIGHT_TOP_FRONT, AABB_FACE_INDEX_Y_POSITIVE, 0},
+            {{1, 1}, AABB_VERTPOS_INDEX_RIGHT_TOP_BACK, AABB_FACE_INDEX_Y_POSITIVE, 0},
             //AABB_FACE_INDEX_Y_POSITIVE : Triangle-Top-2
-            {{0, 0}, AABB_VERTPOS_INDEX_LEFT_TOP_FRONT, 0},
-            {{1, 1}, AABB_VERTPOS_INDEX_RIGHT_TOP_BACK, 0},
-            {{0, 1}, AABB_VERTPOS_INDEX_LEFT_TOP_BACK, 0},
+            {{0, 0}, AABB_VERTPOS_INDEX_LEFT_TOP_FRONT, AABB_FACE_INDEX_Y_POSITIVE, 0},
+            {{1, 1}, AABB_VERTPOS_INDEX_RIGHT_TOP_BACK, AABB_FACE_INDEX_Y_POSITIVE, 0},
+            {{0, 1}, AABB_VERTPOS_INDEX_LEFT_TOP_BACK, AABB_FACE_INDEX_Y_POSITIVE, 0},
 
             //AABB_FACE_INDEX_Z_NEGATIVE: Triangle-Back-1
-            {{0, 0}, AABB_VERTPOS_INDEX_RIGHT_BOTTOM_BACK, 0},
-            {{1, 0}, AABB_VERTPOS_INDEX_LEFT_BOTTOM_BACK, 0},
-            {{1, 1}, AABB_VERTPOS_INDEX_LEFT_TOP_BACK, 0},
+            {{0, 0}, AABB_VERTPOS_INDEX_RIGHT_BOTTOM_BACK, AABB_FACE_INDEX_Z_NEGATIVE, 0},
+            {{1, 0}, AABB_VERTPOS_INDEX_LEFT_BOTTOM_BACK, AABB_FACE_INDEX_Z_NEGATIVE, 0},
+            {{1, 1}, AABB_VERTPOS_INDEX_LEFT_TOP_BACK, AABB_FACE_INDEX_Z_NEGATIVE, 0},
             //AABB_FACE_INDEX_Z_NEGATIVE: Triangle-Back-2
-            {{0, 0}, AABB_VERTPOS_INDEX_RIGHT_BOTTOM_BACK, 0},
-            {{1, 1}, AABB_VERTPOS_INDEX_LEFT_TOP_BACK, 0},
-            {{0, 1}, AABB_VERTPOS_INDEX_RIGHT_TOP_BACK, 0},
+            {{0, 0}, AABB_VERTPOS_INDEX_RIGHT_BOTTOM_BACK, AABB_FACE_INDEX_Z_NEGATIVE, 0},
+            {{1, 1}, AABB_VERTPOS_INDEX_LEFT_TOP_BACK, AABB_FACE_INDEX_Z_NEGATIVE, 0},
+            {{0, 1}, AABB_VERTPOS_INDEX_RIGHT_TOP_BACK, AABB_FACE_INDEX_Z_NEGATIVE, 0},
 
             //AABB_FACE_INDEX_Z_POSITIVE: Triangle-Front-1
-            {{0, 0}, AABB_VERTPOS_INDEX_LEFT_BOTTOM_FRONT, 0},
-            {{1, 0}, AABB_VERTPOS_INDEX_RIGHT_BOTTOM_FRONT, 0},
-            {{1, 1}, AABB_VERTPOS_INDEX_RIGHT_TOP_FRONT, 0},
+            {{0, 0}, AABB_VERTPOS_INDEX_LEFT_BOTTOM_FRONT, AABB_FACE_INDEX_Z_POSITIVE, 0},
+            {{1, 0}, AABB_VERTPOS_INDEX_RIGHT_BOTTOM_FRONT, AABB_FACE_INDEX_Z_POSITIVE, 0},
+            {{1, 1}, AABB_VERTPOS_INDEX_RIGHT_TOP_FRONT, AABB_FACE_INDEX_Z_POSITIVE, 0},
             //AABB_FACE_INDEX_Z_POSITIVE: Triangle-Front-2
-            {{0, 0}, AABB_VERTPOS_INDEX_LEFT_BOTTOM_FRONT, 0},
-            {{1, 1}, AABB_VERTPOS_INDEX_RIGHT_TOP_FRONT, 0},
-            {{0, 1}, AABB_VERTPOS_INDEX_LEFT_TOP_FRONT, 0},
+            {{0, 0}, AABB_VERTPOS_INDEX_LEFT_BOTTOM_FRONT, AABB_FACE_INDEX_Z_POSITIVE, 0},
+            {{1, 1}, AABB_VERTPOS_INDEX_RIGHT_TOP_FRONT, AABB_FACE_INDEX_Z_POSITIVE, 0},
+            {{0, 1}, AABB_VERTPOS_INDEX_LEFT_TOP_FRONT, AABB_FACE_INDEX_Z_POSITIVE, 0},
         },
     }
     state.unique_brush_id_increment += 1
