@@ -19,7 +19,7 @@ box_cursor_move_mode :: enum {
 box_cursor_state :: struct {
     mouse_mode : box_cursor_mouse_mode,
     move_mode : box_cursor_move_mode,
-    min, max, face_pos, color : vec3,
+    min, max, face_pos, color_default, color_selected : vec3,
     is_face_grabbing, is_move_grabbing : bool,
     selected_face_index : i32,
     face_grab_axis : vec3,
@@ -31,7 +31,8 @@ make_box_cursor_state :: proc() -> box_cursor_state {
     return {
         min = {0,0,0},
         max = {1,1,1},
-        color = {1,1,1},
+        color_default = {1,1,1},
+        color_selected = {0.5,1,0.5},
     }
 }
 
@@ -236,7 +237,8 @@ finish_box_cursor_face_grab :: proc (state : ^app_state) {
 
 //draw -----------------------------------------------------------------------------------------------------------------
 draw_box_cursor :: proc(state : ^app_state) {
-    draw_box_line_renderer_aabb(state.box_cursor.min, state.box_cursor.max, state.box_cursor.color, state)
+    box_cursor_col := get_current_box_cursor_color(state)
+    draw_box_line_renderer_aabb(state.box_cursor.min, state.box_cursor.max, box_cursor_col, state)
 
     switch state.box_cursor.mouse_mode {
     case .MOVE:
@@ -316,4 +318,9 @@ get_quad_rot_from_face_index :: proc (face_index : i32) -> quaternion128 {
     case:
         panic("invalid selected_face_index")
     }
+}
+
+@(private="file")
+get_current_box_cursor_color :: proc (state : ^app_state) -> vec3 {
+    return state.selected_brush != nil ? state.box_cursor.color_selected : state.box_cursor.color_default
 }

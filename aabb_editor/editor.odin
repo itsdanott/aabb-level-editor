@@ -208,7 +208,8 @@ draw_editor_settings_window :: proc (state : ^app_state) {
             }
 
             imgui.SeparatorText("Misc")
-            imgui.ColorEdit3("Cursor.Color", &state.box_cursor.color)
+            imgui.ColorEdit3("Cursor.Color.Default", &state.box_cursor.color_default)
+            imgui.ColorEdit3("Cursor.Color.Selected", &state.box_cursor.color_selected)
             
             imgui.SeparatorText("Mouse Mode")
             if imgui.Button("MOVE") do state.box_cursor.mouse_mode = .MOVE
