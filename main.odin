@@ -18,6 +18,7 @@ main :: proc() {
     aabb_editor.init_base_path()
 
     app_state := aabb_editor.make_app_state()
+    defer aabb_editor.cleanup_input(&app_state)
 
     if !aabb_editor.init_glfw() do return
     defer glfw.Terminate()
@@ -27,6 +28,8 @@ main :: proc() {
     
     if !aabb_editor.init_imgui(&app_state) do return
     defer aabb_editor.cleanup_imgui()
+
+    if !aabb_editor.init_editor(&app_state) do return
     
     defer aabb_editor.cleanup_textures(&app_state)
     
@@ -56,7 +59,8 @@ main :: proc() {
 
         //update
         glfw.PollEvents()  
-        aabb_editor.glfw_process_callbacks(&app_state)        
+        aabb_editor.glfw_process_callbacks(&app_state)       
+        aabb_editor.update_input(&app_state) 
         aabb_editor.update_camera_matrices(&app_state.camera)        
         aabb_editor.process_editor_input(&app_state)
 
