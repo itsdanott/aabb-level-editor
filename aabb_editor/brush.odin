@@ -70,7 +70,7 @@ AABB_VERTPOS_INDEX_RIGHT_BOTTOM_BACK : i32 : 5
 AABB_VERTPOS_INDEX_RIGHT_TOP_BACK : i32 : 6
 AABB_VERTPOS_INDEX_LEFT_TOP_BACK : i32 : 7
 
-create_brush_from_box_cursor :: proc (state : ^app_state) {
+create_brush_from_box_cursor :: proc (state : ^app_state, select : bool = true) {
     brush := new(brush)
     brush^ = {
         id = state.unique_brush_id_increment,
@@ -134,6 +134,8 @@ create_brush_from_box_cursor :: proc (state : ^app_state) {
     }
     state.unique_brush_id_increment += 1
     append(&state.brushes, brush)
+    if select do select_brush(brush, state)
+}
 }
 
 cleanup_brushes :: proc (state : ^app_state){
@@ -177,6 +179,7 @@ draw_brush :: proc(brush : ^brush, state : ^app_state) {
 }
 
 select_brush :: proc (brush : ^brush, state : ^app_state)  {
+    if state.selected_brush != nil do deselect_brush(state)
     state.box_cursor.min = brush.min
     state.box_cursor.max = brush.max
 
