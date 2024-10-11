@@ -36,6 +36,7 @@ app_state :: struct {
     brush_renderer : brush_renderer_state,
     texture_array_id : u32,
     selected_brush : ^brush,
+    unique_brush_id_increment : u32,
     is_mouse_hit : bool, //TODO: to be used to get the aabb edge points
     input : input_state,
 }

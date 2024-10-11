@@ -4,6 +4,7 @@ import "core:fmt"
 import "core:math/linalg"
 import "core:strings"
 import "vendor:glfw"
+import "core:strconv"
 import imgui "../third-party/odin-imgui"
 
 USE_IMGUI_MULTIWINDOW :: #config(USE_IMGUI_MULTIWINDOW, false)
@@ -266,6 +267,23 @@ draw_editor_settings_window :: proc (state : ^app_state) {
                 imgui.Separator()
             }
 
+            imgui.TreePop()
+        }
+    }
+    imgui.End()
+
+    is_brush_selected := state.selected_brush != nil
+    if imgui.Begin("Brushes", nil) {
+        if imgui.TreeNode("List") {
+            for brush in state.brushes {
+                label := fmt.aprintf("Brush%v", brush.id)
+                cstr :=  strings.clone_to_cstring(label)
+                defer delete(label)
+
+                if imgui.Selectable(cstr, is_brush_selected && state.selected_brush.id == brush.id) {
+                    select_brush(brush, state) 
+                }
+            }
             imgui.TreePop()
         }
     }

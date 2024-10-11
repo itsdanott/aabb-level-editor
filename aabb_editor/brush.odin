@@ -45,6 +45,7 @@ brush_face :: struct {
 
 }
 brush :: struct {
+    id : u32,
     min, max : vec3,
     faces : [6]brush_face,
     vertices : [6 * 6]brush_vertex,
@@ -68,6 +69,7 @@ AABB_VERTPOS_INDEX_LEFT_TOP_BACK : i32 : 7
 create_brush_from_box_cursor :: proc (state : ^app_state) {
     brush := new(brush)
     brush^ = {
+        id = state.unique_brush_id_increment,
         min = state.box_cursor.min,
         max = state.box_cursor.max,
         vertices = {
@@ -126,6 +128,7 @@ create_brush_from_box_cursor :: proc (state : ^app_state) {
             {{0, 1}, AABB_VERTPOS_INDEX_LEFT_TOP_FRONT, 0},
         },
     }
+    state.unique_brush_id_increment += 1
     append(&state.brushes, brush)
 }
 
