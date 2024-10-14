@@ -62,6 +62,12 @@ get_ray_from_mouse_pos :: proc(state : ^app_state) -> ray {
     return ray
 }
 
+is_point_in_aabb :: proc (point : vec3, aabb : aabb) -> bool {
+    return point.x >= aabb.min.x && point.x <= aabb.max.x &&
+           point.y >= aabb.min.y && point.y <= aabb.max.y &&
+           point.z >= aabb.min.z && point.z <= aabb.max.z
+}
+
 ray_aabb_intersection :: proc (ray : ray, aabb : aabb) -> (result: ray_aabb_intersection_result, is_hit : bool)  {
     //todo: fix divided by zero
     t1 := f32 (aabb.min.x - ray.origin.x) / ray.direction.x
