@@ -52,6 +52,9 @@ main :: proc() {
     defer aabb_editor.cleanup_brush_renderer(&app_state)
     defer aabb_editor.cleanup_brushes(&app_state)
 
+    if !aabb_editor.init_viewport_renderer(&app_state) do return
+    defer aabb_editor.cleanup_viewport_renderer(&app_state)
+
     for !glfw.WindowShouldClose(aabb_editor.glfw_window) {
         //begin frame
         OpenGL.ClearColor(app_state.camera.clear_color.r, app_state.camera.clear_color.g, app_state.camera.clear_color.b, 1.0)
@@ -72,6 +75,7 @@ main :: proc() {
         aabb_editor.draw_box_cursor(&app_state)
 
         //draw 2d
+        aabb_editor.draw_viewport(&app_state)
         aabb_editor.draw_editor_ui(&app_state)
 
         //end of frame

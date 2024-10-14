@@ -39,6 +39,7 @@ app_state :: struct {
     unique_brush_id_increment : u32,
     is_mouse_hit : bool, //TODO: to be used to get the aabb edge points
     input : input_state,
+    viewport_renderer : viewport_renderer_state,
 }
 
 make_app_state :: proc() -> app_state{
@@ -54,6 +55,7 @@ make_app_state :: proc() -> app_state{
         brush_renderer = make_brush_renderer_state(),
         selected_brush = nil,
         input = make_input_state(),
+        viewport_renderer = make_viewport_renderer_state(),
     }
 }
 
