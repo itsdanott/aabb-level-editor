@@ -18,6 +18,12 @@ init_base_path :: proc () {
     
     executable_dir := filepath.dir(executable_path) 
     base_path = filepath.dir(executable_dir)
+    delete(executable_dir)
+}
+
+cleanup_base_path :: proc () {
+    delete(base_path)
+
 }
 
 from_base_path :: proc(file_path : string) -> string {

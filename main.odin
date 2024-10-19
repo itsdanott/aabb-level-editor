@@ -5,6 +5,7 @@ import "core:fmt"
 import "vendor:glfw"
 import "vendor:OpenGL"
 import "core:math/linalg"
+import "core:mem"
 
 check_for_supported_platform :: proc () {
     when !(ODIN_OS == .Darwin || ODIN_OS == .Windows || ODIN_OS == .Linux) {
@@ -12,10 +13,33 @@ check_for_supported_platform :: proc () {
     }
 }
 
-main :: proc() {
+main :: proc() {  
+    when ODIN_DEBUG {
+        track: mem.Tracking_Allocator
+        mem.tracking_allocator_init(&track, context.allocator)
+        context.allocator = mem.tracking_allocator(&track)
+    
+        defer {
+            if len(track.allocation_map) > 0 {
+                fmt.eprintf("=== %v allocations not freed: ===\n", len(track.allocation_map))
+                for _, entry in track.allocation_map {
+                    fmt.eprintf("- %v bytes @ %v\n", entry.size, entry.location)
+                }
+            }
+            if len(track.bad_free_array) > 0 {
+                fmt.eprintf("=== %v incorrect frees: ===\n", len(track.bad_free_array))
+                for entry in track.bad_free_array {
+                    fmt.eprintf("- %p @ %v\n", entry.memory, entry.location)
+                }
+            }
+            mem.tracking_allocator_destroy(&track)
+        }
+    }
+    
     check_for_supported_platform()
 
     aabb_editor.init_base_path()
+    defer aabb_editor.cleanup_base_path()
 
     app_state := aabb_editor.make_app_state()
     defer aabb_editor.cleanup_input(&app_state)

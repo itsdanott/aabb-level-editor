@@ -47,6 +47,7 @@ init_line_renderer :: proc (state : ^app_state) {
 cleanup_line_renderer :: proc (state : ^app_state) {
     gl.DeleteVertexArrays(1, &state.line_renderer.vao)
     gl.DeleteBuffers(1, &state.line_renderer.vbo)
+    delete(state.line_renderer.lines)
 }
 
 add_line_render_handle :: proc(handle : line_render_handle, state : ^app_state) {

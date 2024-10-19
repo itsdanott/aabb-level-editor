@@ -141,6 +141,7 @@ compile_shader :: proc(shader_source : string, shader_type: shader_type) -> (sha
     OpenGL.ShaderSource(shader_id, 1, &source_cstr, nil)
     OpenGL.CompileShader(shader_id)
 
+    delete(source_cstr)
     if !check_shader_compilation(shader_id) do return shader_id, false
 
     return shader_id, true

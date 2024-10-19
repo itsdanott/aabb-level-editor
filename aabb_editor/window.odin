@@ -87,6 +87,7 @@ init_glfw_window :: proc(width, height : u16, title : string) -> bool {
     assert(error == nil)
     
     glfw_window = glfw.CreateWindow(c.int(width), c.int(height), title_cstring, nil, nil)
+    delete(title_cstring)
     if glfw_window == nil {
         fmt.printfln("Failed to create glfw_window!")
         return false
