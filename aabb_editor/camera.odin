@@ -4,6 +4,8 @@ import "core:math"
 import "core:math/linalg"
 import gl "vendor:OpenGL"
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// camera - types
 camera_projection :: enum {
     PERSPECTIVE,
     ORTHOGRAPHIC,
@@ -19,6 +21,8 @@ camera :: struct {
     move_speed, rot_key_sensitivity, rot_mouse_sensitivity_x, rot_mouse_sensitivity_y, orbit_sensitivity : f32,
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// camera - procs
 make_default_cam :: proc () -> camera {
     forward := vec3{0.0, 0.0, -1.0}
     up :=  vec3 {0.0, 1.0, 0.0}

@@ -3,8 +3,13 @@ package aabb_editor
 import gl "vendor:OpenGL"
 import "core:fmt"
 import "core:math/linalg"
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// line_renderer - constants
 max_line_render_handle_count :: 32
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// line_renderer - types
 line_render_handle :: struct {
     from, to, color : vec3,
     life_time : f32,
@@ -16,6 +21,8 @@ line_renderer_state :: struct {
     lines : [dynamic]line_render_handle,
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// line_renderer - procs
 make_line_renderer_state :: proc () -> line_renderer_state{
     return {
         model_matrix = linalg.matrix4_translate(vec3{0,0,0}),

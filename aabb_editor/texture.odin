@@ -22,6 +22,7 @@ load_texture_relative_path :: proc(file_path : string) -> (texture_out: ^texture
 
 load_texture :: proc(file_path : string) -> (texture_out: ^texture, success: bool) {
     path, cstr_err := strings.clone_to_cstring(file_path)
+    defer delete(path)
     assert(cstr_err == nil)
     
     width, height, channels : c.int
@@ -66,10 +67,8 @@ free_texture :: proc(texture : ^texture) {
 }
 
 cleanup_textures :: proc(state : ^app_state) {
-    for texture in state.textures {
-        free_texture(texture)
-    }
-    clear(&state.textures)
+    for texture in state.textures do free_texture(texture)
+    delete(state.textures)
 }
 
 generate_texture_array :: proc(state : ^app_state) {
@@ -79,8 +78,15 @@ generate_texture_array :: proc(state : ^app_state) {
     }
     
     if len(state.textures) == 0 do return
+
     array_textures := [dynamic]^texture{}
     reserve(&array_textures, len(state.textures))
+    
+    //TODO: find out why using make with len instead does not work:
+    // array_textures := make([dynamic]^texture, len(state.textures))
+
+    defer delete(array_textures)
+    
     reference_texture :^texture = nil
     
     for texture in state.textures {

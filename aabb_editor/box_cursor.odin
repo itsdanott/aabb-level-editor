@@ -1,9 +1,12 @@
 package aabb_editor
+
 import "core:math/linalg"
 import "core:fmt"
 import "vendor:glfw"
 import "core:math"
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// box_cursor - enums
 box_cursor_mouse_mode :: enum {
     MOVE,
     BRUSH_SELECT,
@@ -26,6 +29,8 @@ box_cursor_state :: struct {
     camera_distance, camera_pitch, camera_yaw : f32,
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// box_cursor - procs
 @(private)
 make_box_cursor_state :: proc() -> box_cursor_state {
     return {
@@ -36,7 +41,7 @@ make_box_cursor_state :: proc() -> box_cursor_state {
     }
 }
 
-//start grab ----------------------------------------------------------------------------------------------------------
+// Start Grab //////////////////////////////////////////////////////////////////////////////////////////////////////////
 @(private)
 start_box_cursor_mouse_click :: proc (state : ^app_state) {
     ray := get_ray_from_mouse_pos(state)
@@ -109,7 +114,7 @@ start_box_cursor_face_grabbing :: proc (ray : ray, raycast_result : ray_aabb_int
     // }, state)
 }
 
-//update grab-----------------------------------------------------------------------------------------------------------
+// Update Grab /////////////////////////////////////////////////////////////////////////////////////////////////////////
 @(private)
 update_box_cursor_grabbing :: proc (state : ^app_state) {
     switch state.box_cursor.mouse_mode{
@@ -170,7 +175,7 @@ update_box_cursor_face_edit :: proc (state : ^app_state){
     }
 }
 
-//finish grab-----------------------------------------------------------------------------------------------------------
+// Finish Grab  ////////////////////////////////////////////////////////////////////////////////////////////////////////
 @(private)
 finish_box_cursor_grabbing :: proc(state : ^app_state) {
     switch state.box_cursor.mouse_mode {
@@ -240,7 +245,7 @@ finish_box_cursor_face_grab :: proc (state : ^app_state) {
     update_selected_brush_min_max(state.box_cursor.min, state.box_cursor.max, state)
 }
 
-//draw -----------------------------------------------------------------------------------------------------------------
+// Draw ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 draw_box_cursor :: proc(state : ^app_state) {
     box_cursor_col := get_current_box_cursor_color(state)
     draw_box_line_renderer_aabb(state.box_cursor.min, state.box_cursor.max, box_cursor_col, state)

@@ -1,10 +1,15 @@
 package aabb_editor
+
 import gl "vendor:OpenGL"
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// box_line_renderer - types
 box_line_renderer_state :: struct {
     vao, vbo :u32,
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// box_line_renderer - procs
 make_box_line_renderer_state :: proc() -> box_line_renderer_state {
     return {}
 }
@@ -68,6 +73,7 @@ cleanup_box_line_renderer :: proc(state : ^app_state) {
     gl.DeleteBuffers(1, &state.box_line_renderer.vbo)
 }
 
+// Draw /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 draw_box_line_renderer :: proc(pos, scale, color : vec3, state : ^app_state) {
     model : mat4 = create_model_matrix(pos, scale)
 

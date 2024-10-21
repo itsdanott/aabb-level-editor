@@ -1,88 +1,10 @@
 package aabb_editor
+
 import "vendor:glfw"
 import "core:math/bits"
 
-input_state :: struct {
-    keys : map[i32]input_btn_state,
-    mouse_btns : map[i32]input_btn_state,
-}
-
-input_btn_state :: struct {
-    was_pressed, is_pressed, is_start_press, is_release_press : bool,
-    listeners : u16,
-}
-
-@(private)
-make_input_state :: proc() -> input_state {
-    return {
-        keys = make(map[i32]input_btn_state, glfw.KEY_LAST),
-        mouse_btns = make(map[i32]input_btn_state, glfw.MOUSE_BUTTON_LAST),
-    }
-}
-
-cleanup_input :: proc (state : ^app_state){
-    delete(state.input.keys)
-    delete(state.input.mouse_btns)
-}
-
-update_input :: proc(state : ^app_state) {
-    for key, &input in state.input.keys do input_btn_state_update(&input, glfw.GetKey(glfw_window, key) == glfw.PRESS)
-    for btn, &input in state.input.mouse_btns do input_btn_state_update(&input, glfw.GetMouseButton(glfw_window, btn) == glfw.PRESS)
-}
-
-@(private)
-input_btn_state_update :: proc(input : ^input_btn_state, is_pressed : bool) {
-    input.is_pressed = is_pressed
-
-    if input.is_pressed {
-        input.is_start_press = !input.was_pressed
-        if input.is_start_press do input.was_pressed = true
-    } else if input.was_pressed {
-        input.was_pressed = false
-        input.is_start_press = false
-        input.is_release_press = true
-    } else if input.is_release_press do input.is_release_press = false
-}
-
-
-//Important note about the pointers returned by these listening procs:
-//  as we are pre-allocating enough memory for the maps they are never resized - thus the pointers do not change
-//  the approach of caching pointers to elements inside a map does only work under this specific circumstances 
-
-@(private)
-listen_for_input_key :: proc(key : i32, state : ^app_state) -> ^input_btn_state{
-    assert(key >= glfw.KEY_SPACE && key <= glfw.KEY_LAST)
-    return listen_for_input_btn(key, &state.input.keys)
-}
-
-@(private)
-listen_for_input_mouse_btn :: proc(btn : i32, state : ^app_state) -> ^input_btn_state{
-    assert(btn >= glfw.MOUSE_BUTTON_1 && btn <= glfw.MOUSE_BUTTON_LAST)
-    return listen_for_input_btn(btn, &state.input.mouse_btns)
-}
-
-@(private="file")
-listen_for_input_btn :: proc (btn_id : i32, state_map : ^map[i32]input_btn_state) -> ^input_btn_state{
-    btn_state, ok := &state_map[btn_id]
-    if !ok do state_map[btn_id] = {
-            listeners = 1,
-        }
-    else do btn_state^.listeners += 1
-
-    return &state_map[btn_id]
-}
-
-@(private)
-glfw_key_to_str :: proc(key : i32) -> string {
-    assert(key >= glfw.KEY_SPACE && key <= glfw.KEY_LAST)
-
-    str, ok := glfw_key_str_map[key]
-    if !ok do return "Invalid Key!"
-
-    return str
-}
-
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// input - globals
 glfw_key_str_map : map[i32]string = {
     /* Named printable keys */
     32 = "KEY_SPACE",          
@@ -220,4 +142,87 @@ glfw_key_str_map : map[i32]string = {
     346 = "KEY_RIGHT_ALT",
     347 = "KEY_RIGHT_SUPER",
     348 = "KEY_MENU",
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// input - types
+input_state :: struct {
+    keys : map[i32]input_btn_state,
+    mouse_btns : map[i32]input_btn_state,
+}
+
+input_btn_state :: struct {
+    was_pressed, is_pressed, is_start_press, is_release_press : bool,
+    listeners : u16,
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// input - procs
+@(private)
+make_input_state :: proc() -> input_state {
+    return {
+        keys = make(map[i32]input_btn_state, glfw.KEY_LAST),
+        mouse_btns = make(map[i32]input_btn_state, glfw.MOUSE_BUTTON_LAST),
+    }
+}
+
+cleanup_input :: proc (state : ^app_state){
+    delete(state.input.keys)
+    delete(state.input.mouse_btns)
+}
+
+update_input :: proc(state : ^app_state) {
+    for key, &input in state.input.keys do input_btn_state_update(&input, glfw.GetKey(glfw_window, key) == glfw.PRESS)
+    for btn, &input in state.input.mouse_btns do input_btn_state_update(&input, glfw.GetMouseButton(glfw_window, btn) == glfw.PRESS)
+}
+
+@(private)
+input_btn_state_update :: proc(input : ^input_btn_state, is_pressed : bool) {
+    input.is_pressed = is_pressed
+
+    if input.is_pressed {
+        input.is_start_press = !input.was_pressed
+        if input.is_start_press do input.was_pressed = true
+    } else if input.was_pressed {
+        input.was_pressed = false
+        input.is_start_press = false
+        input.is_release_press = true
+    } else if input.is_release_press do input.is_release_press = false
+}
+
+//Important note about the pointers returned by these listening procs:
+//  as we are pre-allocating enough memory for the maps they are never resized - thus the pointers do not change
+//  the approach of caching pointers to elements inside a map does only work under this specific circumstances 
+
+@(private)
+listen_for_input_key :: proc(key : i32, state : ^app_state) -> ^input_btn_state{
+    assert(key >= glfw.KEY_SPACE && key <= glfw.KEY_LAST)
+    return listen_for_input_btn(key, &state.input.keys)
+}
+
+@(private)
+listen_for_input_mouse_btn :: proc(btn : i32, state : ^app_state) -> ^input_btn_state{
+    assert(btn >= glfw.MOUSE_BUTTON_1 && btn <= glfw.MOUSE_BUTTON_LAST)
+    return listen_for_input_btn(btn, &state.input.mouse_btns)
+}
+
+@(private="file")
+listen_for_input_btn :: proc (btn_id : i32, state_map : ^map[i32]input_btn_state) -> ^input_btn_state{
+    btn_state, ok := &state_map[btn_id]
+    if !ok do state_map[btn_id] = {
+            listeners = 1,
+        }
+    else do btn_state^.listeners += 1
+
+    return &state_map[btn_id]
+}
+
+@(private)
+glfw_key_to_str :: proc(key : i32) -> string {
+    assert(key >= glfw.KEY_SPACE && key <= glfw.KEY_LAST)
+
+    str, ok := glfw_key_str_map[key]
+    if !ok do return "Invalid Key!"
+
+    return str
 }

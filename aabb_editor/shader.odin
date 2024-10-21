@@ -137,11 +137,12 @@ get_opengl_shader_type :: proc(shader_type: shader_type) -> u32 {
 compile_shader :: proc(shader_source : string, shader_type: shader_type) -> (shader_id: u32, success: bool) {
     shader_id = OpenGL.CreateShader(get_opengl_shader_type(shader_type))
     source_cstr, cstr_err := strings.clone_to_cstring(shader_source)
+    defer delete(source_cstr)
+    
     assert(cstr_err == nil)
     OpenGL.ShaderSource(shader_id, 1, &source_cstr, nil)
     OpenGL.CompileShader(shader_id)
 
-    delete(source_cstr)
     if !check_shader_compilation(shader_id) do return shader_id, false
 
     return shader_id, true

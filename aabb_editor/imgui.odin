@@ -4,6 +4,8 @@ import imgui "../third-party/odin-imgui"
 import "../third-party/odin-imgui/imgui_impl_glfw"
 import "../third-party/odin-imgui/imgui_impl_opengl3"
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// imgui - procs
 init_imgui :: proc(state : ^app_state) -> bool {
     imgui.CHECKVERSION()
     imgui.CreateContext()

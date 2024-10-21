@@ -1,9 +1,12 @@
 package aabb_editor
+
 import "core:math/linalg"
 import "core:math"
 import "vendor:glfw"
 import "core:fmt"
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// raycast - types
 ray :: struct {
     origin, direction : vec3,
 }
@@ -21,6 +24,8 @@ plane :: struct {
     distance : f32,
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// raycast - procs
 get_snapped_world_pos_from_mouse_pos :: proc(state : ^app_state) -> vec3 {
     world_pos := get_world_pos_from_mouse_pos(state)
     
@@ -101,18 +106,6 @@ ray_aabb_intersection :: proc (ray : ray, aabb : aabb) -> (result: ray_aabb_inte
 
     return result, true
 }
-
-//un-tested
-// raycast_plane :: proc (ray : ray, plane : plane) -> f32 {
-//     nd := linalg.dot(ray.direction, plane.normal)
-//     pn := linalg.dot(ray.origin, plane.normal)
-//     if nd >= 0.0 do return -1.0
-
-//     t := (plane.distance - pn) / nd
-//     if t >= 0.0 do return t
-
-//     return -1.0
-// }
 
 get_xz_plane_intersection_from_mouse_pos :: proc (state : ^app_state, plane_y : f32 = 0.0, positive_traversal_only : 
 bool = false) -> (intersection : vec3, has_intersection:bool) {

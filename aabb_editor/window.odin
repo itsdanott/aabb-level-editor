@@ -84,10 +84,10 @@ init_glfw :: proc() -> bool {
 
 init_glfw_window :: proc(width, height : u16, title : string) -> bool {
     title_cstring, error := strings.clone_to_cstring(title)
+    defer delete(title_cstring)
     assert(error == nil)
     
     glfw_window = glfw.CreateWindow(c.int(width), c.int(height), title_cstring, nil, nil)
-    delete(title_cstring)
     if glfw_window == nil {
         fmt.printfln("Failed to create glfw_window!")
         return false
@@ -115,7 +115,10 @@ glfw_process_callbacks :: proc (state : ^app_state) {
     for file_path, index in glfw_dropped_paths {
         fmt.printfln("Dropped file: %v", file_path)
         extension := filepath.ext(file_path)
-        if strings.to_lower(extension) == ".png" {
+        extension_lower := strings.to_lower(extension)
+        defer delete(extension_lower)
+
+        if extension_lower == ".png" {
             texture, texture_success := load_texture(file_path)
             if !texture_success {
                 fmt.printfln("Failed to load texture: %v", file_path)

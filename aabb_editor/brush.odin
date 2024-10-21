@@ -1,10 +1,53 @@
 package aabb_editor
+
 import gl "vendor:OpenGL"
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// brush - constants
+AABB_VERTPOS_INDEX_LEFT_BOTTOM_FRONT : i32 : 0
+AABB_VERTPOS_INDEX_RIGHT_BOTTOM_FRONT : i32 : 1
+AABB_VERTPOS_INDEX_RIGHT_TOP_FRONT : i32 : 2
+AABB_VERTPOS_INDEX_LEFT_TOP_FRONT : i32 : 3
+AABB_VERTPOS_INDEX_LEFT_BOTTOM_BACK : i32 : 4
+AABB_VERTPOS_INDEX_RIGHT_BOTTOM_BACK : i32 : 5
+AABB_VERTPOS_INDEX_RIGHT_TOP_BACK : i32 : 6
+AABB_VERTPOS_INDEX_LEFT_TOP_BACK : i32 : 7
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// brush - types
+texcoord_mode :: enum {
+    WORLD_SPACE,
+    TEX_COORDS,
+}
+
+brush_face :: struct {
+    has_texture : bool,
+    texture_id : int,
+    texcoord_mode : texcoord_mode,
+    color : vec3,
+
+}
+
+brush :: struct {
+    id : u32,
+    min, max : vec3,
+    faces : [6]brush_face,
+    vertices : [6 * 6]brush_vertex,
+}
+
+brush_vertex :: struct {
+    texcoord : vec2,
+    vert_pos_index : i32,
+    vert_normal_index : i32,
+    texture_id : i32,
+}
 
 brush_renderer_state :: struct { 
     vao, vbo, ebo : u32,
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// brush - procs
 make_brush_renderer_state :: proc () -> brush_renderer_state {
     return {}
 }
@@ -34,41 +77,6 @@ cleanup_brush_renderer :: proc (state : ^app_state) {
     gl.DeleteVertexArrays(1, &state.brush_renderer.vao)
     gl.DeleteBuffers(1, &state.brush_renderer.vbo)
 }
-
-texcoord_mode :: enum {
-    WORLD_SPACE,
-    TEX_COORDS,
-}
-
-brush_face :: struct {
-    has_texture : bool,
-    texture_id : int,
-    texcoord_mode : texcoord_mode,
-    color : vec3,
-
-}
-brush :: struct {
-    id : u32,
-    min, max : vec3,
-    faces : [6]brush_face,
-    vertices : [6 * 6]brush_vertex,
-}
-
-brush_vertex :: struct {
-    texcoord : vec2,
-    vert_pos_index : i32,
-    vert_normal_index : i32,
-    texture_id : i32,
-}
-
-AABB_VERTPOS_INDEX_LEFT_BOTTOM_FRONT : i32 : 0
-AABB_VERTPOS_INDEX_RIGHT_BOTTOM_FRONT : i32 : 1
-AABB_VERTPOS_INDEX_RIGHT_TOP_FRONT : i32 : 2
-AABB_VERTPOS_INDEX_LEFT_TOP_FRONT : i32 : 3
-AABB_VERTPOS_INDEX_LEFT_BOTTOM_BACK : i32 : 4
-AABB_VERTPOS_INDEX_RIGHT_BOTTOM_BACK : i32 : 5
-AABB_VERTPOS_INDEX_RIGHT_TOP_BACK : i32 : 6
-AABB_VERTPOS_INDEX_LEFT_TOP_BACK : i32 : 7
 
 create_brush_from_box_cursor :: proc (state : ^app_state, select : bool = true) {
     brush := new(brush)
@@ -153,12 +161,11 @@ delete_brush :: proc(brush : ^brush, state : ^app_state) {
 }
 
 cleanup_brushes :: proc (state : ^app_state){
-    for brush in state.brushes {
-        free(brush)
-    }
-    clear(&state.brushes)
+    for brush in state.brushes do free(brush)
+    delete(state.brushes)
 }
 
+// Draw ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 draw_brushes :: proc(state : ^app_state){
     gl.FrontFace(gl.CCW)
     gl.Enable(gl.CULL_FACE)
@@ -192,6 +199,7 @@ draw_brush :: proc(brush : ^brush, state : ^app_state) {
     gl.DrawArrays(gl.TRIANGLES, 0, 6 * 6)
 }
 
+// Selection ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 select_brush :: proc (brush : ^brush, state : ^app_state)  {
     if state.selected_brush != nil do deselect_brush(state)
     state.box_cursor.min = brush.min
@@ -210,11 +218,13 @@ update_selected_brush_min_max :: proc (min, max :vec3,  state : ^app_state) {
     state.selected_brush.max = max
 }
 
+// Assign Texture //////////////////////////////////////////////////////////////////////////////////////////////////////
 assign_texture_to_brush :: proc (brush : ^brush, array_texture_index : i32) {
     for &vertex in brush.vertices {
         vertex.texture_id = array_texture_index
     }
 } 
+
 assign_texture_to_brush_face :: proc (brush : ^brush, array_texture_index : i32, face_index : i32) {
     assert(face_index > -1)
 

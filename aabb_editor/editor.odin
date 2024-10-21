@@ -7,9 +7,13 @@ import "vendor:glfw"
 import "core:strconv"
 import imgui "../third-party/odin-imgui"
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// editor - constants
 USE_IMGUI_MULTIWINDOW :: #config(USE_IMGUI_MULTIWINDOW, false)
 HALF_PI : f32 : linalg.PI * 0.5
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// editor - types
 editor_state :: struct {
     is_editor_visible : bool,
     show_settings_window : bool,
@@ -21,6 +25,8 @@ editor_state :: struct {
     snap_factor : f32,
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// editor - procs
 make_editor_state :: proc() -> editor_state {
     return {
         is_editor_visible = true,
@@ -110,8 +116,7 @@ process_editor_input :: proc (state: ^app_state) {
         state.camera.pos += cam_velocity * state.camera.move_speed * delta_time
     }
 }
-
-//2d--------------------------------------------------------------------------------------------------------------------
+// Draw ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 draw_editor_ui :: proc (state : ^app_state) {
     if !state.editor.is_editor_visible do return
     
@@ -256,15 +261,22 @@ draw_editor_settings_window :: proc (state : ^app_state) {
                     if state.selected_brush != nil {                        
                         imgui.SeparatorText("Assign Texture")
                         btn_label_all := fmt.aprintf("To all Brush faces ##%v", index)
-                        if imgui.Button(strings.clone_to_cstring(btn_label_all)) {
+                        defer delete(btn_label_all)
+                        btn_label_all_cstr := strings.clone_to_cstring(btn_label_all)
+                        defer delete(btn_label_all_cstr)
+                        if imgui.Button(btn_label_all_cstr) {
                             fmt.printfln("Assigning texture array index %v to brush!", texture.array_index)
                             assign_texture_to_brush(state.selected_brush, texture.array_index)
                         }
 
                         if state.box_cursor.mouse_mode == .FACE_SELECT {
                             btn_label_selected := fmt.aprintf("Selected Brush Face ##%v", index)
-                            if imgui.Button(strings.clone_to_cstring(btn_label_selected)) {
-                                fmt.printfln("Assigning texture array index %v to brush face-index:", 
+                            defer delete(btn_label_selected)
+                            btn_label_selected_cstr := strings.clone_to_cstring(btn_label_selected)
+                            defer delete(btn_label_selected_cstr)
+                            
+                            if imgui.Button(btn_label_selected_cstr) {
+                                fmt.printfln("Assigning texture array index %v to brush face-index: %v", 
                                     texture.array_index, state.box_cursor.selected_face_index)
                                 assign_texture_to_brush_face(state.selected_brush, texture.array_index, 
                                     state.box_cursor.selected_face_index)
@@ -276,7 +288,11 @@ draw_editor_settings_window :: proc (state : ^app_state) {
                 }
 
                 checkbox_label := fmt.aprintf("in_array##%v", index)
-                imgui.Checkbox(strings.clone_to_cstring(checkbox_label), &state.textures[index].is_in_array)
+                defer delete(checkbox_label)
+                checkbox_label_cstr := strings.clone_to_cstring(checkbox_label)
+                defer delete(checkbox_label_cstr)
+
+                imgui.Checkbox(checkbox_label_cstr, &state.textures[index].is_in_array)
                 imgui.Separator()
             }
 
@@ -290,8 +306,9 @@ draw_editor_settings_window :: proc (state : ^app_state) {
         if imgui.TreeNode("List") {
             for brush in state.brushes {
                 label := fmt.aprintf("Brush%v", brush.id)
-                cstr :=  strings.clone_to_cstring(label)
                 defer delete(label)
+                cstr :=  strings.clone_to_cstring(label)
+                defer delete(cstr)
 
                 if imgui.Selectable(cstr, is_brush_selected && state.selected_brush.id == brush.id) {
                     select_brush(brush, state) 
